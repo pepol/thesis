@@ -1,0 +1,29 @@
+\chapter{\v{S}pecifik\'{a}cia a n\'{a}vrh syst\'{e}mu}
+\label{ch:spec}
+
+V tejto kapitole vyslovíme požiadavky na systém a navrhneme riešenie.
+
+\section{\'{U}vod do problematiky}
+
+Majme projekt skladajúci sa z väčšieho množstva zdrojových súborov, ktoré treba
+skompilovať (alebo pre webové aplikácie minifikovať) predtým, ako z nich vytvoríme
+výslednú aplikáciu. Keďže tento postup je presne daný a častokrát opakovaný,
+je veľmi výhodné ušetriť čas potrebný na písanie všetkých príkazov za sebou
+použitím nejakého systému, ktorý to zautomatizuje. Okrem automatizácie chceme
+určite ušetriť aj čas pri takzvanej rekompilácii, aby sa po zmene niekoľkých súborov
+nemusela znova kompilovať celá aplikácia. Niekoľko existujúcich systémov spomíname
+v~\ref{sec:existing}.
+
+V prípade spoločnosti pracujúcej na projektoch obsahujúcich rádovo stovky až tisíce
+súborov je takýto systém nevyhnutný. Avšak aj pri použití automatizácie a použitia
+výsledkov predchádzajúcich behov môže rekompilácia, najmä pri väčších zmenách,
+trvať dlho, čo znižuje nielen produktivitu zamestnancov, ale aj zisky spoločnosti.
+Preto niektoré korporácie využívajú na kompiláciu (ktorá je pri veľkom počte
+nezávislých súborov inherentne vysoko paralelizovateľná) nielen pracovné stanice
+zamestnancov, ale, v prípade internetových gigantov aj ich serverové farmy.
+
+Avšak narážame na problém. V čase písania tejto práce sú všetky takto distribuované
+riešenia uzavreté, neprístupné verejnosti, iba spoločnosti, ktorá ho vyvinula
+a drží si ho pod svojou strechou. Toto je veľká nevýhoda pre začínajúce start-up
+organizácie, ktoré, aj keď majú k dispozícii servery, ktoré by takto mohli využiť,
+nnemôžu si dovoliť vývoj takéhoto riešenia.
