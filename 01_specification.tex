@@ -4,6 +4,7 @@
 V tejto kapitole vyslovíme požiadavky na systém a navrhneme riešenie.
 
 \section{\'{U}vod do problematiky}
+\label{sec:intro}
 
 Majme projekt skladajúci sa z väčšieho množstva zdrojových súborov, ktoré treba
 skompilovať (alebo pre webové aplikácie minifikovať) predtým, ako z nich vytvoríme
@@ -12,7 +13,7 @@ je veľmi výhodné ušetriť čas potrebný na písanie všetkých príkazov za
 použitím nejakého systému, ktorý to zautomatizuje. Okrem automatizácie chceme
 určite ušetriť aj čas pri takzvanej rekompilácii, aby sa po zmene niekoľkých súborov
 nemusela znova kompilovať celá aplikácia. Niekoľko existujúcich systémov spomíname
-v~\ref{sec:existing}.
+v časti~\ref{sec:existing}.
 
 V prípade spoločnosti pracujúcej na projektoch obsahujúcich rádovo stovky až tisíce
 súborov je takýto systém nevyhnutný. Avšak aj pri použití automatizácie a použitia
@@ -26,4 +27,180 @@ Avšak narážame na problém. V čase písania tejto práce sú všetky takto d
 riešenia uzavreté, neprístupné verejnosti, iba spoločnosti, ktorá ho vyvinula
 a drží si ho pod svojou strechou. Toto je veľká nevýhoda pre začínajúce start-up
 organizácie, ktoré, aj keď majú k dispozícii servery, ktoré by takto mohli využiť,
-nnemôžu si dovoliť vývoj takéhoto riešenia.
+nemôžu si dovoliť vývoj takéhoto riešenia pre vlastnú potrebu.
+
+\section{Formul\'{a}cia probl\'{e}mu}
+\label{sec:problem}
+
+Sformulujme teda problém na základe predchádzajúcej časti a pridajme ďalšie
+požiadavky:
+
+\begin{itemize}
+  \item Automatizácia kompilácie a linkovania zdrojových súborov do výslednej aplikácie.
+  \item Využívanie predchádzajúcich výsledkov pri ďalších behoch.
+  \item Distribúcia kompilácie na servery, pokiaľ sú dostupné.
+  \item Sprístupnenie existujúcich behov a výsledkov celej organizácii.
+  \item Rozšíriteľná podpora rôznych jazykov a postupov.
+  \item Minimalizovanie potreby ručnej konfigurácie.
+  \item Podpora VCS\footnote{Version Control System}, najmä Git.\footnote{\url{https://git-scm.com}}
+  \item Vydané pod open-source licenciou.
+\end{itemize}
+
+Pozrime sa podrobnejšie na niektoré požiadavky.
+
+\subsubsection{Sprístupnenie existujúcich behov a výsledkov celej organizácii}
+Ak dvaja zamestnanci pracujú na projekte potrebujúcom kompiláciu tisícky súborov,
+nie je dôvod aby obaja, pri prvom pokuse skompilovať takýto projekt, museli čakať
+niekoľko hodín pred tým ako môžu ďalej pracovať. Preto plánujeme vytvoriť distribuované
+úložisko objektov vytvorených kompiláciou na serveroch, ktoré budú takto dostupné
+všetkým používateľom daného systému. Toto všetko za účelom čo najväčšieho ušetrenia
+výpočtového výkonu a času spotrebovaného kompiláciou.
+
+\subsubsection{Rozšíriteľná podpora rôznych jazykov a postupov}
+V prvej verzii tohto systému plánujeme implementovať podporu pre niekoľko najpoužívanejších
+jazykov. Avšak uvedomujeme si, že takýto systém by mal byť nezávislý na použitých
+nástrojoch a preto jeho súčasťou bude aj jednoduchý spôsob pridávania podpory
+pre iné platformy.
+
+\subsubsection{Minimalizovanie potreby ručnej konfigurácie}
+V prípade existujúcich riešení je častokrát až zarážajúce množstvo konfigurácie
+ktorú treba vykonať pri použití takého systému v projekte. Náš systém by mal
+tieto záležitosti čo najviac zjednodušiť.
+
+\subsubsection{Podpora VCS}
+Veľké množstvo projektov závisí na súboroch, knižniciach, ktoré sa nenachádzajú
+v ich repozitári, ale sú dostupné pod nejakým VCS\@. Náš systém by mal, pri
+vhodnej špecifikácii dostupnosti týchto závislostí v konfigurácii, byť schopný
+automaticky stiahnuť a použiť pri kompilácii takúto závislosť, bez potreby akejkoľvek
+činnosti od používateľa.
+
+\section{Existuj\'{u}ce syst\'{e}my}
+\label{sec:existing}
+V tejto časti popíšeme niekoľko open-source build systémov. Vo všetkých prípadoch
+ide ale iba o lokálnu kompiláciu.
+
+\subsubsection{GNU Make}
+Najstarší a stále pravdepodobne najpoužívanejší build systém. Využíva súbor
+nazvaný Makefile, ktorý obsahuje popis pravidiel na vytváranie súborov na základe
+ich prípony. Na zabránenie opakovanej kompilácii porovnáva časy posledného zápisu
+do súborov (zdrojového a výsledného), čo ale nezabraňuje opakovanej kompilácii
+napríklad v prípade obnovenia zdrojového súboru zo zálohy. Na zjednodušenie písania
+pravidiel v Makefile vzniklo niekoľko systémov, ktoré tvorbu Makefile automatizujú.
+Medzi najpoužívanejšie patria GNU Autotools a CMake.
+
+\subsubsection{Apache Ant}
+Apache Ant je build systém, ktorý adresuje niekoľko problémov s prenositeľnosťou
+Makefile súborov medzi platformami, keďže tieto špecifikujú akcie ako postupnosť
+príkazov v shelli. Konfigurácia je vykonávaná v XML súboroch, ktoré definujú
+strom úloh (tasks) pre projekt. Každá z úloh je implementovaná ako trieda v
+jazyku Java, v ktorom je implementovaný aj celý Ant a teda je jednoduché
+pridať nové úlohy, ako aj preniesť existujúce úlohy na nové systémy. Tento systém
+využívajú najmä projekty písane v jazyku Java.
+
+\subsubsection{Bazel}
+Open-source verzia interného build systému spoločnosti Google, ktorý bol prvý krát
+zverejnený v roku 2014. Využíva podobné koncepty ako Apache Ant. Funkcionalita tohto
+systému bola popísaná v roku 2012 sériou článkov na Google Developers blogu
+\cite{BlazeDesign} a slúži ako inšpirácia pri návrhu nášho systému. Podľa plánov
+vydania \cite{BazelRoadmap} sa ale Google nechystá zverejniť ich implementáciu
+distribuovanej kompilácie, ktorá je popísaná vo vyššie spomínanej sérii článkov.
+
+\section{N\'{a}vrh rie\v{s}enia}
+\label{sec:solution}
+V tejto časti popíšeme jednotlivé komponenty systému a ich funkcionalitu.
+
+\subsection{Master}
+\label{sub:solution:master}
+Aplikáciu bude predstavovať program, bežiaci na užívateľskom počítači. Tento program
+nazvime {\it master}.
+
+Úlohou mastera bude v okamihu zavolania a špecifikovania cieľa kompilácie spracovať
+konfiguráciu cieľov daného projektu a vytvoriť strom závislostí. Následne master
+kontaktuje jednotlivé {\it slave} komponenty bežiace na rôznych strojoch (lokálny
+počítač, serverová farma a pod.) a rozdistribuuje ciele na tieto počítače čo možno
+najefektívnejšie.
+
+V prípade, že cieľ alebo podciele závisia na vonkajšom projekte, tento projekt je,
+v prípade, že jeho repozitár je dostupný, stiahnutý a použitý. V prípade nedostupnosti
+niektorej zo závislostí program ukončí beh s chybovou hláškou.
+
+\subsection{Slave}
+\label{sub:solution:slave}
+Slave je program starajúci sa o vykonávanie úloh zadaných masterom. Na fyzickom počítači,
+či už lokálnom, alebo na serveri bude bežať zvyčajne niekoľko slave programov, nakoľko
+jeden slave program bude navrhnutý na vykonávanie úloh pre práve jeden cieľ. Keď voľný
+slave obdrží úlohu, v prvom kroku sa pozrie do zdieľaného úložiska objektov, ak je
+toto dostupné, či už žiadaný súbor neexistuje. V prípade jeho existencie slave
+pošle výsledný súbor priamo masterovi a nebude vykonávať kompiláciu. V prípade
+neexistencie výsledného súboru v žiadanej verzii bude cieľ preložený na postupnosť
+akcií a tieto budú vykonané.
+
+\subsection{\'{U}lo\v{z}isko objektov}
+\label{sub:solution:storage}
+Úložisko objektov slúži ako cache na zabránenie opakovanej kompilácii rovnakých
+súborov. Výsledné súbory tu budú nahrané po dokončení kompilácie slave programom.
+Ukladanie bude prebiehať podľa názvu zdrojového súboru a jeho kontrolného súčtu,
+aby sa ľahko rozlíšili rôzne verzie súboru, napríklad lokálne modifikovaná od
+tzv. HEAD verzie\footnote{najnovšia verzia nahraná zverejnená v hlavnom repozitári}.
+
+V prípade nášho úložiska sme sa rozhodli použiť na kontrolné súčty hashovaciu funkciu
+SHA512, kvôli čo najväčšej minimalizácii kolízií.
+
+\subsection{Ciele kompil\'{a}cie}
+\label{sub:solution:targets}
+Ciele kompilácie delíme nasledovne:
+
+\begin{itemize}
+  \item Súbory, delia sa na 2 podskupiny:
+    \begin{itemize}
+      \item Zdrojové súbory
+      \item Generované súbory
+    \end{itemize}
+  \item Pravidlá
+\end{itemize}
+
+Pri vyžiadaní kompilácie cieľa vytvoríme orientovaný graf závislostí, ktorý vyžadujeme,
+aby bol acyklický. V prípade nájdenia cyklu systém ukončí beh s chybou o nesplniteľnosti
+požiadavky. Takto zostrojený graf bude, na základe vyššie uvedených typov cieľov,
+bipartitný.
+
+Nasleduje bližší popis jednotlivých typov cieľov:
+
+\subsubsection{Zdrojové súbory}
+Toto sú súbory, ktoré sa nachádzajú priamo v repozitári projektu, sú vytvorené
+ľuďmi (alebo nástrojmi) a nie generované týmto systémom. V grafe závislostí
+tvoria listy grafu.
+
+\subsubsection{Generované súbory}
+Súbory vytvorené ako výstup z nejakého pravidla, častokrát slúžia zároveň aj ako
+vstupné súbory pre ďalšie akcie.
+
+\subsubsection{Pravidlá}
+Popisujú vzťah a postup vytvorenia výstupného súboru zo súborov vstupných.
+Každé pravidlo má práve jeden výstupný súbor a 0 alebo viac vstupných. Pravidlá
+zahŕňajú postupy ako kompilácia, linkovanie a podobne.
+
+\begin{figure}[h]
+  \centerline{\includegraphics[width=0.6\textwidth]{images/dependency_graph}}
+  \caption[Graf závislostí]{Príklad grafu závislostí, okrúhle vrcholy predstavujú
+  súbory, štvorcové vrcholy predstavujú pravidlá.}
+  \label{img:dependency_graph}
+\end{figure}
+
+Takto zostrojený graf bude potom použitý slave komponentmi na vytvorenie výstupných
+súborov s použitím pravidiel a príkazov ktoré so sebou nesú.
+
+\newpage
+
+\subsection{Vo\v{l}ba technol\'{o}gi\'{i}}
+\label{sub:solution:tech}
+
+Pre tento projekt sme zvolili 2 programovacie jazyky, jazyk Go\footnote{\url{https://golang.org}}
+pre používateľskú (master) časť aplikácie a Erlang\footnote{\url{https://www.erlang.org}}
+pre serverovú (slave) časť. Objektové úložisko bude využívať program rsync\footnote{\url{https://rsync.samba.org}},
+ktorý dokáže pristupovať k súborom pomocou rôznych protokolov. Na strane servera bude úložisko
+a jeho distribuovanosť prenechaná na súborový systém, kde existuje niekoľko vhodných
+open-source alternatív. Tieto technológie budú bližšie popísané v nasledujúcej kapitole.
+
+Zdrojový kód bude verzionovaný systémom Git\footnote{\url{https://git-scm.com}} a
+zverejnený pod licenciou MIT v GitHub repozitári na adrese \url{https://github.com/imterra/forge}.
