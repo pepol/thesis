@@ -1,15 +1,15 @@
 \chapter{\v{S}pecifik\'{a}cia a n\'{a}vrh syst\'{e}mu}
 \label{ch:spec}
 
-V tejto kapitole vyslovíme požiadavky na systém a navrhneme riešenie.
+V tejto kapitole popíšeme požiadavky na systém a navrhneme riešenie.
 
 \section{\'{U}vod do problematiky}
 \label{sec:intro}
 
 Majme projekt skladajúci sa z väčšieho množstva zdrojových súborov, ktoré treba
 skompilovať (alebo pre webové aplikácie minifikovať) predtým, ako z nich vytvoríme
-výslednú aplikáciu. Keďže tento postup je presne daný a častokrát opakovaný,
-je veľmi výhodné ušetriť čas potrebný na písanie všetkých príkazov za sebou
+výslednú aplikáciu. Keďže postup kompilácie je presne daný a častokrát opakovaný,
+je veľmi výhodné ušetriť čas potrebný na spúšťanie všetkých príkazov za sebou
 použitím nejakého systému, ktorý to zautomatizuje. Okrem automatizácie chceme
 určite ušetriť aj čas pri takzvanej rekompilácii, aby sa po zmene niekoľkých súborov
 nemusela znova kompilovať celá aplikácia. Niekoľko existujúcich systémov spomíname
@@ -21,7 +21,7 @@ výsledkov predchádzajúcich behov môže rekompilácia, najmä pri väčších
 trvať dlho, čo znižuje nielen produktivitu zamestnancov, ale aj zisky spoločnosti.
 Preto niektoré korporácie využívajú na kompiláciu (ktorá je pri veľkom počte
 nezávislých súborov inherentne vysoko paralelizovateľná) nielen pracovné stanice
-zamestnancov, ale, v prípade internetových gigantov aj ich serverové farmy.
+zamestnancov, ale aj ich serverové farmy.
 
 Avšak narážame na problém. V čase písania tejto práce sú všetky takto distribuované
 riešenia uzavreté, neprístupné verejnosti, iba spoločnosti, ktorá ho vyvinula
@@ -63,7 +63,7 @@ nástrojoch a preto jeho súčasťou bude aj jednoduchý spôsob pridávania pod
 pre iné platformy.
 
 \subsubsection{Minimalizovanie potreby ručnej konfigurácie}
-V prípade existujúcich riešení je častokrát až zarážajúce množstvo konfigurácie
+V prípade existujúcich riešení je častokrát až zarážajúce množstvo konfigurácie,
 ktorú treba vykonať pri použití takého systému v projekte. Náš systém by mal
 tieto záležitosti čo najviac zjednodušiť.
 
@@ -80,22 +80,24 @@ V tejto časti popíšeme niekoľko open-source build systémov. Vo všetkých p
 ide ale iba o lokálnu kompiláciu.
 
 \subsubsection{GNU Make}
-Najstarší a stále pravdepodobne najpoužívanejší build systém. Využíva súbor
-nazvaný Makefile, ktorý obsahuje popis pravidiel na vytváranie súborov na základe
-ich prípony. Na zabránenie opakovanej kompilácii porovnáva časy posledného zápisu
-do súborov (zdrojového a výsledného), čo ale nezabraňuje opakovanej kompilácii
-napríklad v prípade obnovenia zdrojového súboru zo zálohy. Na zjednodušenie písania
-pravidiel v Makefile vzniklo niekoľko systémov, ktoré tvorbu Makefile automatizujú.
-Medzi najpoužívanejšie patria GNU Autotools a CMake.
+GNU Make\footnote{\url{https://www.gnu.org/software/make/}} je najstarší a stále
+pravdepodobne najpoužívanejší build systém. Využíva súbor nazvaný Makefile, ktorý
+obsahuje popis pravidiel na vytváranie súborov na základe ich prípony. Na zabránenie
+opakovanej kompilácii porovnáva časy posledného zápisu do súborov (zdrojového a
+výsledného), čo ale nezabraňuje opakovanej kompilácii napríklad v prípade obnovenia
+zdrojového súboru zo zálohy. Tento systém podporuje paralelnú kompiláciu, ale len
+v obmedzenej miere a na lokálnom počítači. Na zjednodušenie písania pravidiel v Makefile
+vzniklo niekoľko systémov, ktoré tvorbu Makefile automatizujú. Medzi najpoužívanejšie
+patria GNU Autotools a CMake.
 
 \subsubsection{Apache Ant}
-Apache Ant je build systém, ktorý adresuje niekoľko problémov s prenositeľnosťou
-Makefile súborov medzi platformami, keďže tieto špecifikujú akcie ako postupnosť
-príkazov v shelli. Konfigurácia je vykonávaná v XML súboroch, ktoré definujú
-strom úloh (tasks) pre projekt. Každá z úloh je implementovaná ako trieda v
-jazyku Java, v ktorom je implementovaný aj celý Ant a teda je jednoduché
-pridať nové úlohy, ako aj preniesť existujúce úlohy na nové systémy. Tento systém
-využívajú najmä projekty písane v jazyku Java.
+Apache Ant\footnote{\url{https://ant.apache.org/}} je build systém, ktorý adresuje
+niekoľko problémov s prenositeľnosťou Makefile súborov medzi platformami, keďže
+tieto špecifikujú akcie ako postupnosť príkazov v shelli. Konfigurácia je vykonávaná
+v XML súboroch, ktoré definujú strom úloh (tasks) pre projekt. Každá z úloh je
+implementovaná ako trieda v jazyku Java, v ktorom je implementovaný aj celý Ant
+a teda je jednoduché pridať nové úlohy, ako aj preniesť existujúce úlohy na nové
+systémy. Tento systém využívajú najmä projekty písane v jazyku Java.
 
 \subsubsection{Bazel}
 Open-source verzia interného build systému spoločnosti Google, ktorý bol prvý krát
@@ -120,9 +122,9 @@ kontaktuje jednotlivé {\it slave} komponenty bežiace na rôznych strojoch (lok
 počítač, serverová farma a pod.) a rozdistribuuje ciele na tieto počítače čo možno
 najefektívnejšie.
 
-V prípade, že cieľ alebo podciele závisia na vonkajšom projekte, tento projekt je,
-v prípade, že jeho repozitár je dostupný, stiahnutý a použitý. V prípade nedostupnosti
-niektorej zo závislostí program ukončí beh s chybovou hláškou.
+Pokiaľ cieľ alebo podciele závisia na vonkajšom projekte a repozitár tohto projektu
+je dostupný, tento projekt je stiahnutý a použitý. V prípade nedostupnosti niektorej
+zo závislostí program ukončí beh s chybovou hláškou.
 
 \subsection{Slave}
 \label{sub:solution:slave}
@@ -150,26 +152,10 @@ SHA512, kvôli čo najväčšej minimalizácii kolízií.
 \label{sub:solution:targets}
 Ciele kompilácie delíme nasledovne:
 
-\begin{itemize}
-  \item Súbory, delia sa na 2 podskupiny:
-    \begin{itemize}
-      \item Zdrojové súbory
-      \item Generované súbory
-    \end{itemize}
-  \item Pravidlá
-\end{itemize}
-
-Pri vyžiadaní kompilácie cieľa vytvoríme orientovaný graf závislostí, ktorý vyžadujeme,
-aby bol acyklický. V prípade nájdenia cyklu systém ukončí beh s chybou o nesplniteľnosti
-požiadavky. Takto zostrojený graf bude, na základe vyššie uvedených typov cieľov,
-bipartitný.
-
-Nasleduje bližší popis jednotlivých typov cieľov:
-
 \subsubsection{Zdrojové súbory}
 Toto sú súbory, ktoré sa nachádzajú priamo v repozitári projektu, sú vytvorené
-ľuďmi (alebo nástrojmi) a nie generované týmto systémom. V grafe závislostí
-tvoria listy grafu.
+ľuďmi (alebo nástrojmi) a nie generované týmto systémom. V grafe závislostí sú
+koncovými vrcholmi, keďže nemajú žiadne závislosti.
 
 \subsubsection{Generované súbory}
 Súbory vytvorené ako výstup z nejakého pravidla, častokrát slúžia zároveň aj ako
@@ -179,6 +165,18 @@ vstupné súbory pre ďalšie akcie.
 Popisujú vzťah a postup vytvorenia výstupného súboru zo súborov vstupných.
 Každé pravidlo má práve jeden výstupný súbor a 0 alebo viac vstupných. Pravidlá
 zahŕňajú postupy ako kompilácia, linkovanie a podobne.
+
+\subsubsection{Graf závislostí}
+
+Pri vyžiadaní kompilácie cieľa vytvoríme orientovaný graf závislostí, ktorý vyžadujeme,
+aby bol acyklický. V prípade nájdenia cyklu systém ukončí beh s chybou o nesplniteľnosti
+požiadavky.
+
+Vrcholy grafu tvoria súbory a pravidlá, kde hrana od súboru k pravidlu existuje
+práve vtedy, keď je súbor vstupom pravidla, a od pravidla k súboru, ak je súbor
+výstupom pravidla. Takto vytvorený graf bude bipartitný, kde disjunktnými množinami
+sú pravidlá a súbory. Na obrázku \ref{img:dependency_graph} sa nachádza príklad
+takéhoto grafu.
 
 \begin{figure}[h]
   \centerline{\includegraphics[width=0.6\textwidth]{images/dependency_graph}}
