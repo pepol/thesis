@@ -9,14 +9,145 @@ na ktoré sme počas implementácie narazili.
 \section{Master}
 \label{sec:master}
 
+\begin{listing}[!h]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=48,lastline=79]{go}{/home/pepol/src/imterra/forge/client/target/parse.go}
+  \caption[Funkcia ParseFile]{Funkcia ParseFile, ktorá spracúva BUILD súbory.}
+  \label{lst:client:parsefile}
+\end{listing}
+
 \subsection{Spracov\'{a}vanie BUILD s\'{u}borov}
 \label{sec:master:buildfile}
 
-\subsection{Tvorba grafu z\'{a}vislost\'{i}}
-\label{sec:master:depgraph}
+BUILD súbory obsahujú popis projektu z pohľadu nášho systému. Súbory štandardne
+pomenúvame \texttt{build.yaml} a ich obsah je vo formáte YAML\@. Na spracovanie
+formátu YAML v jazyku Go sme sa rozhodli použiť knižnicu
+\texttt{simpleyaml}\footnote{\url{https://github.com/smallfish/simpleyaml}}.
+Táto knižnica prečíta text vo formáte YAML a umožní s údajmi pracovať pomocou
+štandardných údajových štruktúr jazyka Go, ako je napríklad integer, string,
+pole alebo mapa.
+
+Listing~\ref{lst:client:parsefile} obsahuje zdrojový kód funkcie ParseFile, ktorá
+s použitím knižnice simpleyaml spracúva BUILD súbory a vytvára z nich objekty
+reprezentujúce ciele.
+
+\subsection{Reprezentácia cieľov, rozhranie Target}
+\label{sec:master:target}
+
+\begin{listing}[!h]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=7,lastline=13]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
+  \caption[Rozhranie Target]{Rozhranie popisujúce objekt reprezentujúci cieľ kompilácie.}
+  \label{lst:client:target}
+\end{listing}
+
+Každý typ cieľa reprezentujeme ako triedu implementujúcu rozhranie typu Target.
+Jeho definícia je uvedená v listingu~\ref{lst:client:target}. Postupne popíšeme
+jednotlivé metódy.
+
+\subsubsection{GetName}
+Metóda vracajúca názov daného cieľa ako je uvedený v BUILD súbore.
+
+\subsubsection{GetSources}
+Táto metóda vráti zoznam zdrojových súborov daného cieľa. V prípade neexistenie
+takýchto súborov, metóda vráti prázdne pole. Zdrojové súbory sú v BUILD súbore
+špecifikované ako zoznam \texttt{sources}.
+
+Medzi zdrojové súbory patria hlavne zdrojové súbory programu v určitom
+programovacom jazyku, ktoré je potrebné skompilovať. Sú to najčastejšie textové
+súbory so špecifickou príponou.
+
+\subsubsection{GetResources}
+Metóda vracajúca zoznam súborov prostriedkov. Funkcionalita je rovnaká ako v
+prípade metódy GetSources. Súbory prostriedkov sú špecifikované ako zoznam
+\texttt{resources}.
+
+Medzi súbory prostriedkov patria súbory, ktoré je potrebne spracovať iným spôsobom
+ako zdrojový kód programu. Ako príklad uvádzame ikony, obrázky alebo videá v
+prípade počítačových hier.
+
+\subsubsection{GetDependencies}
+Táto metóda vráti zoznam cieľov, na ktorých aktuálny cieľ závisí. Každý člen
+tohto zoznamu implementuje rozhranie Target. Pomocou tejto metódy pristupujeme
+k vzniknutému grafu závislostí.
+
+\subsubsection{GetOutputFile}
+Táto metóda vráti referenciu na vygenerovaný súbor (typu GeneratedFile, ktorý
+implementuje rozhranie File). Pomocou tohto súboru pristupujeme ku bipartitnému
+grafu súborov a akcií.
+
+\subsection{Trieda LibCTarget}
+\label{sec:master:libctarget}
+
+Trieda LibCTarget implementuje cieľ typu \verb!lib_c!, ktorý sa používa na
+kompiláciu zdrojových kódov jazyku C, ktoré potom môžu využívať rôzne aplikácie.
+
+Trieda LibCTarget vygeneruje staticky linkovanú knižnicu obsahujúcu skompilované
+zdrojové súbory. Takto vygenerovanú knižnicu môžeme použiť vo fáze linkovania
+akejkoľvek aplikácie.
+
+\begin{figure}[h]
+  \centerline{\includegraphics[width=0.6\textwidth]{images/libctarget}}
+  \caption[Graf akcií pre typ LibCTarget]{Ukážka grafu akcií vytvoreného pre typ
+  LibCTarget.}
+  \label{img:libctarget}
+\end{figure}
+
+
+Ukážka vytvoreného grafu akcií pre OS Linux je znázornená na obrázku~\ref{img:libctarget},
+skladá sa z dvoch akcií: V prvej fáze je každý zdrojový súbor skompilovaný
+do objektového súboru jazyka C\footnote{kompilátor jazyka C sa štandardne označuje
+pomocou písmen CC, z anglického C Compiler} a následne sú všetky takto skompilované súbory
+vložené do archívu vytvoreného programom ar(1)\footnote{\url{http://linux.die.net/man/1/ar}}.
+
+\subsection{Trieda AppCAction}
+\label{sec:master:appcaction}
+
+Táto trieda reprezentuje cieľ typu \verb!app_c!, ktorý sa používa na špecifikáciu
+spustiteľného programu / aplikácie napísanej v jazyku C.
+
+Trieda AppCTarget vygeneruje staticky linkovaný spustiteľný súbor obsahujúci
+skompilované zdrojové kódy, zlinkované s knižnicami uvedenými ako závislosťami.
+
+\begin{figure}[h]
+  \centerline{\includegraphics[width=0.6\textwidth]{images/appctarget}}
+  \caption[Graf akcií pre typ AppCTarget]{Ukážka grafu akcií pre typ AppCTarget,
+  súbor c.a je výstupom cieľa \texttt{c} typu LibCTarget.}
+  \label{img:appctarget}
+\end{figure}
+
+Na obrázku~\ref{img:appctarget} sa nachádza ukážka grafu akcií pre AppCTarget
+v prostredí OS Linux. Tento graf je tvorený akciami kompilácie (pre zdrojové
+súbory) a linkovania\footnote{štandardný linker v OS UNIX a Linux má názov ld,
+z ktorého vzniklo označenie LD} výsledných objektov s knižnicami.
 
 \subsection{Prevod grafu cie\v{l}ov do grafu akci\'{i}}
 \label{sec:master:target2action}
+
+Ako uvádzame v časti~\ref{sec:master:target}, metóda GetOutputFile rozhrania Target
+je zodpovedná za vytvorenie správneho grafu akcií pre daný cieľ. Graf akcií je
+bipartitný graf zlozžený z objektov rozhrania Action (akcie, úlohy) a objektov
+rozhrania File (zdrojové alebo vygenerované súbory).
+
+Nasleduje popis funkcionality metódy pre jednotlivé triedy:
+
+\subsubsection{LibCTarget}
+V metóde prechádzame zoznam mien zdrojových súborov a z každého vytvoríme objekt typu
+SourceFile (implementujúci rozhranie File) a jeho ekvivalentný objektový súbor
+typu GeneratedFile (taktiež implementujúci rozhranie File). Následne pre každú
+takúto dvojicu zdrojového a z neho vygenerovaného súboru vytvoríme akciu typu
+CompileCAction (rozhrania Action), ktorej vstupným súborom bude zdrojový
+súbor a výstupným vygenerovaný objektový.
+
+Následne vytvoríme súbor reprezentujúci vytváranú knižnicu ako celok (typu GeneratedFile),
+ktorý bude výstupným súborom prislúchajúcej akcie typu ArLinkAction (rozhrania Action).
+V predchádzajúcom kroku vygenerované objektové súbory použijeme ako vstupné
+súbory pre túto akciu.
+
+\subsubsection{AppCTarget}
+Metóda sa na zdrojových súboroch správa rovnako ako v triede LibCTarget. Po
+vytvorení takejto knižnice prejdeme rekurzívne závislosti a ich výstupné
+súbory, spolu s práve vytvorenou knižnicou predáme ako vstupné súbory
+akcii LinkAction (rozhrania Action), ktorej výstupným súborom (typu GeneratedFile)
+je požadovaná spustiteľná aplikácia.
 
 \subsection{Distrib\'{u}cia akci\'{i}}
 \label{sec:master:distribution}
