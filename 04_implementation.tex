@@ -9,12 +9,6 @@ na ktoré sme počas implementácie narazili.
 \section{Master}
 \label{sec:master}
 
-\begin{listing}[!h]
-  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=48,lastline=79]{go}{/home/pepol/src/imterra/forge/client/target/parse.go}
-  \caption[Funkcia ParseFile]{Funkcia ParseFile, ktorá spracúva BUILD súbory.}
-  \label{lst:client:parsefile}
-\end{listing}
-
 \subsection{Spracov\'{a}vanie BUILD s\'{u}borov}
 \label{sec:master:buildfile}
 
@@ -30,10 +24,16 @@ Listing~\ref{lst:client:parsefile} obsahuje zdrojový kód funkcie ParseFile, kt
 s použitím knižnice simpleyaml spracúva BUILD súbory a vytvára z nich objekty
 reprezentujúce ciele.
 
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=48,lastline=79]{go}{/home/pepol/src/imterra/forge/client/target/parse.go}
+  \caption[Funkcia ParseFile]{Funkcia ParseFile, ktorá spracúva BUILD súbory.}
+  \label{lst:client:parsefile}
+\end{listing}
+
 \subsection{Reprezentácia cieľov, rozhranie Target}
 \label{sec:master:target}
 
-\begin{listing}[!h]
+\begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=7,lastline=13]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
   \caption[Rozhranie Target]{Rozhranie popisujúce objekt reprezentujúci cieľ kompilácie.}
   \label{lst:client:target}
@@ -155,6 +155,85 @@ je požadovaná spustiteľná aplikácia.
 
 \section{Slave}
 \label{sec:slave}
+
+Slave komponent je určený na vykonávanie úloh. Implementujeme ho v jazyku Go
+ako RPC\footnote{Remote Procedure Call - vzdialené volanie procedúr} server.
+V rámci tohto serveru poskytujeme niekoľko implementovaných RPC služieb,
+z ktorých každá implementuje pomocou svojich procedúr určitú časť funkcionality.
+
+V nasledujúcich častiach si popíšeme jednotlivé služby a procedúry ktoré
+poskytujú.
+
+\subsection{RPC služba Task}
+\label{sec:slave:rpc:action}
+
+Služba Task poskytuje procedúry na vykonávanie úloh priamo súvisiacich so
+splnením cieľa. Tieto úlohy su ekvivalentné akciám na strane Master komponentu.
+
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=3,lastline=7]{go}{/home/pepol/src/imterra/forge/proto/proto.go}
+  \caption[Argumenty služby Task]{Štruktúra špecifikujúca argumenty procedúr RPC služby Task.}
+  \label{lst:rpc:action:args}
+\end{listing}
+
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=9,lastline=12]{go}{/home/pepol/src/imterra/forge/proto/proto.go}
+  \caption[Návratová hodnota služby Task]{Štruktúra špecifikujúca návratovú hodnotu procedúr RPC služby Task.}
+  \label{lst:rpc:action:response}
+\end{listing}
+
+Každá z týchto procedúr dostáva ako argumenty meno akcie, zoznam vstupných súborov
+s cestou relatívnou ku koreňovému priečinku systému a informáciu, či volajúci
+vyžaduje poslanie výsledného súboru. Implementáciu uvádzame v listingu~\ref{lst:rpc:action:args}.
+
+Výsledkom volania procedúry je výstup, ktorý vznikol počas jej vykonávania a,
+pokiaľ volajúci o to požiadal, obsah vzniknutého súboru. Implementáciu uvádzame
+v listingu~\ref{lst:rpc:action:response}.
+
+Pri spúšťaní Slave komponentu umožňujeme používateľovi zvoliť, koľko úloh súčasne sa
+môže vykonávať pomocou argumentu \texttt{jobs}. Ako prednastavenú hodnotu sme zvolili počet
+CPU ktoré sa na danom počítači nachádzajú. Tento počet ovplyvňuje počet súčasne
+aktívnych procedúr služby Task, ktoré na zabezpečenie používajú semafór implementovaný
+pomocou atribútu objektu služby. Funkcionalitu semafóru sme dosiahli pomocou
+dátového typu channel, ktorému určujeme veľkosť na základe hodnoty argumentu \texttt{jobs}.
+Zároveň u každej procedúry tejto služby vyžadujeme, aby pri spustení zapísala do semafóru
+údaje, akcia ktorá v jazyku Go blokuje, ak je objekt naplnený, a po skončení vykonávania,
+úspešnom ako aj neúspešnom, hodnotu zo semafóru prečítala a tým uvoľnila miesto pre
+vykonávanie ďalších procedúr.
+
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=9,lastline=22]{go}{/home/pepol/src/imterra/forge/worker/tasks/util.go}
+  \caption{Funkcia na prípravu argumentov pre volanie príkazu.}
+  \label{lst:rpc:processinputs}
+\end{listing}
+
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=24,lastline=40]{go}{/home/pepol/src/imterra/forge/worker/tasks/util.go}
+  \caption{Funkcia na prípravu odpovede služby Task.}
+  \label{lst:rpc:prepareresp}
+\end{listing}
+
+V nasledujúcich častiach popisujeme jednotlivé procedúry služby Task. V týchto
+procedúrach sú činnosti ako príprava odpovede na odoslanie (listing~\ref{lst:rpc:prepareresp})
+alebo príprava argumentov pre volanie externého príkazu (listing~\ref{lst:rpc:processinputs})
+často opakované, preto sme sa rozhodli ich implementácie uviesť samostatne.
+
+\subsubsection{CompileC}
+
+Táto procedúra vykonáva kompiláciu C súboru do objektového súboru. Vzhľadom na to,
+že táto akcia vyžaduje iba 1 zdrojový súbor, rozhodli sme sa signalizovať chybu
+kedykoľvek na vstupe dostaneme viac súborov.
+
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=20,lastline=47]{go}{/home/pepol/src/imterra/forge/worker/tasks/tasks.go}
+  \caption[Implementácia kompilácie jazyka C]{Implementácia úlohy kompilácie programovacieho jazyka C pre OS Linux.}
+  \label{lst:rpc:compilec}
+\end{listing}
+
+
+V listingu~\ref{lst:rpc:compilec} sme ukázali implementáciu procedúry pre OS Linux
+a kompilátor GNU GCC\@. Táto procedúra volá externý príkaz s predpripravenými parametrami,
+ktorého výstup posunie v návratovej hodnote volajúcemu.
 
 \subsection{Komunika\v{c}n\'{y} protokol}
 \label{sec:slave:protocol}
