@@ -25,7 +25,7 @@ s použitím knižnice simpleyaml spracúva BUILD súbory a vytvára z nich obje
 reprezentujúce ciele.
 
 \begin{listing}[H]
-  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=48,lastline=79]{go}{/home/pepol/src/imterra/forge/client/target/parse.go}
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=44,lastline=75]{go}{/home/pepol/src/imterra/forge/client/target/parse.go}
   \caption[Funkcia ParseFile]{Funkcia ParseFile, ktorá spracúva BUILD súbory.}
   \label{lst:client:parsefile}
 \end{listing}
@@ -34,7 +34,7 @@ reprezentujúce ciele.
 \label{sec:master:target}
 
 \begin{listing}[H]
-  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=7,lastline=13]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=8,lastline=14]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
   \caption[Rozhranie Target]{Rozhranie popisujúce objekt reprezentujúci cieľ kompilácie.}
   \label{lst:client:target}
 \end{listing}
@@ -98,8 +98,8 @@ do objektového súboru jazyka C\footnote{kompilátor jazyka C sa štandardne oz
 pomocou písmen CC, z anglického C Compiler} a následne sú všetky takto skompilované súbory
 vložené do archívu vytvoreného programom ar(1)\footnote{\url{http://linux.die.net/man/1/ar}}.
 
-\subsection{Trieda AppCAction}
-\label{sec:master:appcaction}
+\subsection{Trieda AppCTarget}
+\label{sec:master:appctarget}
 
 Táto trieda reprezentuje cieľ typu \verb!app_c!, ktorý sa používa na špecifikáciu
 spustiteľného programu / aplikácie napísanej v jazyku C.
@@ -171,19 +171,19 @@ Služba Task poskytuje procedúry na vykonávanie úloh priamo súvisiacich so
 splnením cieľa. Tieto úlohy su ekvivalentné akciám na strane Master komponentu.
 
 \begin{listing}[H]
-  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=3,lastline=7]{go}{/home/pepol/src/imterra/forge/proto/proto.go}
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=8,lastline=12]{go}{/home/pepol/src/imterra/forge/proto/proto.go}
   \caption[Argumenty služby Task]{Štruktúra špecifikujúca argumenty procedúr RPC služby Task.}
   \label{lst:rpc:action:args}
 \end{listing}
 
 \begin{listing}[H]
-  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=9,lastline=12]{go}{/home/pepol/src/imterra/forge/proto/proto.go}
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=14,lastline=17]{go}{/home/pepol/src/imterra/forge/proto/proto.go}
   \caption[Návratová hodnota služby Task]{Štruktúra špecifikujúca návratovú hodnotu procedúr RPC služby Task.}
   \label{lst:rpc:action:response}
 \end{listing}
 
 Každá z týchto procedúr dostáva ako argumenty meno akcie, zoznam vstupných súborov
-s cestou relatívnou ku koreňovému priečinku systému a informáciu, či volajúci
+s cestou relatívnou ku koreňovému priečinku systému, ich SHA512 kontrolným súčtom a informáciu, či volajúci
 vyžaduje poslanie výsledného súboru. Implementáciu uvádzame v listingu~\ref{lst:rpc:action:args}.
 
 Výsledkom volania procedúry je výstup, ktorý vznikol počas jej vykonávania a,
