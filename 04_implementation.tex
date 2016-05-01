@@ -130,7 +130,16 @@ rozhrania File (zdrojové alebo vygenerované súbory).
 Nasleduje popis funkcionality metódy pre jednotlivé triedy:
 
 \subsubsection{LibCTarget}
-V metóde prechádzame zoznam mien zdrojových súborov a z každého vytvoríme objekt typu
+
+\begin{listing}[h]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=23,lastline=59]{go}{/home/pepol/src/imterra/forge/client/actions/util.go}
+  \caption[Pomocná metóda MakeCObjects]{Implementácia metódy generujúcej akcie
+  kompilácie súborov v jazyku C.}
+  \label{lst:target2action:makecobjs}
+\end{listing}
+
+V pomocnej metóde MakeCObjects, ktorú sme uviedli v listingu~\ref{lst:target2action:makecobjs},
+prechádzame zoznam mien zdrojových súborov a z každého vytvoríme objekt typu
 SourceFile (implementujúci rozhranie File) a jeho ekvivalentný objektový súbor
 typu GeneratedFile (taktiež implementujúci rozhranie File). Následne pre každú
 takúto dvojicu zdrojového a z neho vygenerovaného súboru vytvoríme akciu typu
@@ -140,14 +149,27 @@ súbor a výstupným vygenerovaný objektový.
 Následne vytvoríme súbor reprezentujúci vytváranú knižnicu ako celok (typu GeneratedFile),
 ktorý bude výstupným súborom prislúchajúcej akcie typu ArLinkAction (rozhrania Action).
 V predchádzajúcom kroku vygenerované objektové súbory použijeme ako vstupné
-súbory pre túto akciu.
+súbory pre túto akciu. Implementačné detaily uvedieme v listingu~\ref{lst:target2action:libc}.
+
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=48,lastline=73]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
+  \caption{Metóda GetOutputFile triedy LibCTarget}
+  \label{lst:target2action:libc}
+\end{listing}
 
 \subsubsection{AppCTarget}
 Metóda sa na zdrojových súboroch správa rovnako ako v triede LibCTarget. Po
 vytvorení takejto knižnice prejdeme rekurzívne závislosti a ich výstupné
 súbory, spolu s práve vytvorenou knižnicou predáme ako vstupné súbory
 akcii LinkAction (rozhrania Action), ktorej výstupným súborom (typu GeneratedFile)
-je požadovaná spustiteľná aplikácia.
+je požadovaná spustiteľná aplikácia. Implementačné detaily sa nachádzajú v
+listingu~\ref{lst:target2action:appc}.
+
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=91,lastline=129]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
+  \caption{Metóda GetOutputFile triedy AppCTarget}
+  \label{lst:target2action:appc}
+\end{listing}
 
 \subsection{Distrib\'{u}cia akci\'{i}}
 \label{sec:master:distribution}
@@ -230,10 +252,38 @@ kedykoľvek na vstupe dostaneme viac súborov.
   \label{lst:rpc:compilec}
 \end{listing}
 
-
 V listingu~\ref{lst:rpc:compilec} sme ukázali implementáciu procedúry pre OS Linux
 a kompilátor GNU GCC\@. Táto procedúra volá externý príkaz s predpripravenými parametrami,
 ktorého výstup posunie v návratovej hodnote volajúcemu.
+
+\subsubsection{ArLink}
+
+Táto procedúra vytvorí staticky linkovateľnú knižnicu. V OS Linux sa jedná o archív
+obsahujúci jednotlivé objektové súbory, ktorý je vytvorený programom ar, podľa ktorého
+sme pomenovali aj procedúru. Jej implementáciu pre OS Linux uvádzame v listingu~\ref{lst:rpc:arlink}.
+Rovnako ako v prípade CompileC procedúry sa jedná o volanie externého príkazu.
+
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=49,lastline=72]{go}{/home/pepol/src/imterra/forge/worker/tasks/tasks.go}
+  \caption{Implementácia staticky linkovanej knižnice pre OS Linux}
+  \label{lst:rpc:arlink}
+\end{listing}
+
+\subsubsection{LdLink}
+
+Procedúra LdLink, nazvaná podľa programu ld(1) určeného na linkovanie programov,
+vytvára výslednú aplikáciu zlinkovaním statických knižníc uvedených ako závislosti
+cieľa a objektových súborov, ktoré vzniknú kompiláciou zo zdrojových kódov programu.
+
+\begin{listing}[H]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=74,lastline=97]{go}{/home/pepol/src/imterra/forge/worker/tasks/tasks.go}
+  \caption{Implementácia linkovania aplikácie v OS Linux.}
+  \label{lst:rpc:ldlink}
+\end{listing}
+
+V OS Linux implementácia volá GNU GCC\@, ako uvádzame v listingu~\ref{lst:rpc:ldlink}, ktorý
+poskytuje zjednodušené linkovanie, vďaka množstvu predpripravených nastavení pre program
+ld.
 
 \subsection{Komunika\v{c}n\'{y} protokol}
 \label{sec:slave:protocol}
