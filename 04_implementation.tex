@@ -26,7 +26,7 @@ reprezentujúce ciele.
 
 \begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=44,lastline=75]{go}{/home/pepol/src/imterra/forge/client/target/parse.go}
-  \caption[Funkcia ParseFile]{Funkcia ParseFile, ktorá spracúva BUILD súbory.}
+  \caption[Funkcia ParseFile]{Funkcia ParseFile, ktorá spracúva BUILD súbory}
   \label{lst:client:parsefile}
 \end{listing}
 
@@ -35,7 +35,7 @@ reprezentujúce ciele.
 
 \begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=8,lastline=14]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
-  \caption[Rozhranie Target]{Rozhranie popisujúce objekt reprezentujúci cieľ kompilácie.}
+  \caption[Rozhranie Target]{Rozhranie popisujúce objekt reprezentujúci cieľ kompilácie}
   \label{lst:client:target}
 \end{listing}
 
@@ -87,7 +87,7 @@ akejkoľvek aplikácie.
 \begin{figure}[h]
   \centerline{\includegraphics[width=0.6\textwidth]{images/libctarget}}
   \caption[Graf akcií pre typ LibCTarget]{Ukážka grafu akcií vytvoreného pre typ
-  LibCTarget.}
+  LibCTarget}
   \label{img:libctarget}
 \end{figure}
 
@@ -110,7 +110,7 @@ skompilované zdrojové kódy, zlinkované s knižnicami uvedenými ako závislo
 \begin{figure}[h]
   \centerline{\includegraphics[width=0.6\textwidth]{images/appctarget}}
   \caption[Graf akcií pre typ AppCTarget]{Ukážka grafu akcií pre typ AppCTarget,
-  súbor c.a je výstupom cieľa \texttt{c} typu LibCTarget.}
+  súbor c.a je výstupom cieľa \texttt{c} typu LibCTarget}
   \label{img:appctarget}
 \end{figure}
 
@@ -134,7 +134,7 @@ Nasleduje popis funkcionality metódy pre jednotlivé triedy:
 \begin{listing}[h]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=23,lastline=59]{go}{/home/pepol/src/imterra/forge/client/actions/util.go}
   \caption[Pomocná metóda MakeCObjects]{Implementácia metódy generujúcej akcie
-  kompilácie súborov v jazyku C.}
+  kompilácie súborov v jazyku C}
   \label{lst:target2action:makecobjs}
 \end{listing}
 
@@ -194,13 +194,13 @@ splnením cieľa. Tieto úlohy su ekvivalentné akciám na strane Master kompone
 
 \begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=8,lastline=12]{go}{/home/pepol/src/imterra/forge/proto/proto.go}
-  \caption[Argumenty služby Task]{Štruktúra špecifikujúca argumenty procedúr RPC služby Task.}
+  \caption[Argumenty služby Task]{Štruktúra špecifikujúca argumenty procedúr RPC služby Task}
   \label{lst:rpc:action:args}
 \end{listing}
 
 \begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=14,lastline=17]{go}{/home/pepol/src/imterra/forge/proto/proto.go}
-  \caption[Návratová hodnota služby Task]{Štruktúra špecifikujúca návratovú hodnotu procedúr RPC služby Task.}
+  \caption[Návratová hodnota služby Task]{Štruktúra špecifikujúca návratovú hodnotu procedúr RPC služby Task}
   \label{lst:rpc:action:response}
 \end{listing}
 
@@ -225,13 +225,13 @@ vykonávanie ďalších procedúr.
 
 \begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=9,lastline=22]{go}{/home/pepol/src/imterra/forge/worker/tasks/util.go}
-  \caption{Funkcia na prípravu argumentov pre volanie príkazu.}
+  \caption{Funkcia na prípravu argumentov pre volanie príkazu}
   \label{lst:rpc:processinputs}
 \end{listing}
 
 \begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=24,lastline=40]{go}{/home/pepol/src/imterra/forge/worker/tasks/util.go}
-  \caption{Funkcia na prípravu odpovede služby Task.}
+  \caption{Funkcia na prípravu odpovede služby Task}
   \label{lst:rpc:prepareresp}
 \end{listing}
 
@@ -248,7 +248,7 @@ kedykoľvek na vstupe dostaneme viac súborov.
 
 \begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=20,lastline=47]{go}{/home/pepol/src/imterra/forge/worker/tasks/tasks.go}
-  \caption[Implementácia kompilácie jazyka C]{Implementácia úlohy kompilácie programovacieho jazyka C pre OS Linux.}
+  \caption[Implementácia kompilácie jazyka C]{Implementácia úlohy kompilácie programovacieho jazyka C pre OS Linux}
   \label{lst:rpc:compilec}
 \end{listing}
 
@@ -277,7 +277,7 @@ cieľa a objektových súborov, ktoré vzniknú kompiláciou zo zdrojových kód
 
 \begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=74,lastline=97]{go}{/home/pepol/src/imterra/forge/worker/tasks/tasks.go}
-  \caption{Implementácia linkovania aplikácie v OS Linux.}
+  \caption{Implementácia linkovania aplikácie v OS Linux}
   \label{lst:rpc:ldlink}
 \end{listing}
 
@@ -285,14 +285,38 @@ V OS Linux implementácia volá GNU GCC\@, ako uvádzame v listingu~\ref{lst:rpc
 poskytuje zjednodušené linkovanie, vďaka množstvu predpripravených nastavení pre program
 ld.
 
-\subsection{Komunika\v{c}n\'{y} protokol}
-\label{sec:slave:protocol}
+\subsection{RPC služba File}
+\label{sec:slave:rpc:file}
 
-\subsection{Z\'{i}skavanie zdrojov\'{y}ch s\'{u}borov}
-\label{sec:slave:retrieval}
+Služba File poskytuje možnosti prenosu súborov medzi Slave a Master komponentmi.
+V rámci tejto služby implementujeme nasledovné procedúry:
 
-\subsection{Vykon\'{a}vanie akcie}
-\label{sec:slave:execution}
+\begin{listing}[h]
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=7,lastline=21]{go}{/home/pepol/src/imterra/forge/proto/files.go}
+  \caption{Štruktúry požiadaviek a odpovedí služby File}
+  \label{lst:rpc:fileargs}
+\end{listing}
 
-\subsection{Poskytovanie vygenerovan\'{y}ch s\'{u}borov}
-\label{sec:slave:provision}
+
+\subsubsection{SendFile}
+
+Jedná sa o požiadavku volajúceho na obsah súboru nachádzajúceho sa na serveri.
+Súčasťou požiadavky je meno súboru a jeho kontrolný súčet algoritmom SHA512.
+Odpoveď servera obsahuje meno súboru a jeho obsah, vrátane metadát, ktoré, okrem
+iného, popisujú prístupové práva k súboru. Tieto informácie vyžadujeme za účelom
+zachovania napr.\ práv na spustenie aplikácie.
+
+Formát požiadavky aj odpovede je opísany v listingu~\ref{lst:rpc:fileargs}.
+Požiadavku reprezentuje štruktúra FileRequest a odpoveď štruktúra File.
+
+V prípade, že by súbor neexistoval, alebo nebol prístupný, procedúra signalizuje chybu.
+
+\subsubsection{RecvFile}
+
+Procedúra na odoslanie súboru serveru. Požiadavkou je popis súboru, štruktúra
+File v listingu~\ref{lst:rpc:fileargs}. V prípade neexistencie adresára v ktorom
+sa má súbor umiestniť, sa ho procedúra pokúsi vytvoriť, následne zapíše súbor
+na disk. V prípade akýchkoľvek problémov signalizuje chybu. Výsledok procedúry
+popisuje štruktúra FileResponse v listingu~\ref{lst:rpc:fileargs}, ktorá okrem mena
+súboru a kontrolného súčtu údajov obsahuje tiež informáciu, či táto požiadavka
+prepísala existujúci súbor.
