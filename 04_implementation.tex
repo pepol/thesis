@@ -9,6 +9,17 @@ na ktoré sme počas implementácie narazili.
 \section{Master}
 \label{sec:master}
 
+Master komponent je hlavná, používateľská, časť aplikácie. Implementovali sme ju
+v jazyku Go. Pri spustení aplikácia kontaktuje Slave komponenty, ktoré sú
+určené nastaveniami, od každého si vyžiada informácie potrebné pre distribúciu
+úloh a takto inicializovaná začne so spracovávaním cieľov zadaných používateľom.
+
+V rámci inicializácie taktiež spúšťame lokálny Slave komponent, ktorého úlohou je
+spracovávanie úloh na lokálnom počítači.
+
+V nasledujúcich častiach postupne popíšeme jednotlivé časti a funkcionalitu Master
+komponentu.
+
 \subsection{Spracov\'{a}vanie BUILD s\'{u}borov}
 \label{sec:master:buildfile}
 
@@ -25,7 +36,7 @@ s použitím knižnice simpleyaml spracúva BUILD súbory a vytvára z nich obje
 reprezentujúce ciele.
 
 \begin{listing}[H]
-  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=44,lastline=75]{go}{/home/pepol/src/imterra/forge/client/target/parse.go}
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=65,lastline=96]{go}{/home/pepol/src/imterra/forge/client/target/parse.go}
   \caption[Funkcia ParseFile]{Funkcia ParseFile, ktorá spracúva BUILD súbory}
   \label{lst:client:parsefile}
 \end{listing}
@@ -70,9 +81,8 @@ tohto zoznamu implementuje rozhranie Target. Pomocou tejto metódy pristupujeme
 k vzniknutému grafu závislostí.
 
 \subsubsection{GetOutputFile}
-Táto metóda vráti referenciu na vygenerovaný súbor (typu GeneratedFile, ktorý
-implementuje rozhranie File). Pomocou tohto súboru pristupujeme ku bipartitnému
-grafu súborov a akcií.
+Táto metóda vráti referenciu na vygenerovaný súbor, objekt typu File. Pomocou tohto
+objektu pristupujeme ku bipartitnému grafu súborov a akcií.
 
 \subsection{Trieda LibCTarget}
 \label{sec:master:libctarget}
@@ -132,27 +142,26 @@ Nasleduje popis funkcionality metódy pre jednotlivé triedy:
 \subsubsection{LibCTarget}
 
 \begin{listing}[h]
-  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=23,lastline=59]{go}{/home/pepol/src/imterra/forge/client/actions/util.go}
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=23,lastline=61]{go}{/home/pepol/src/imterra/forge/client/actions/util.go}
   \caption[Pomocná metóda MakeCObjects]{Implementácia metódy generujúcej akcie
   kompilácie súborov v jazyku C}
   \label{lst:target2action:makecobjs}
 \end{listing}
 
 V pomocnej metóde MakeCObjects, ktorú sme uviedli v listingu~\ref{lst:target2action:makecobjs},
-prechádzame zoznam mien zdrojových súborov a z každého vytvoríme objekt typu
-SourceFile (implementujúci rozhranie File) a jeho ekvivalentný objektový súbor
-typu GeneratedFile (taktiež implementujúci rozhranie File). Následne pre každú
-takúto dvojicu zdrojového a z neho vygenerovaného súboru vytvoríme akciu typu
-CompileCAction (rozhrania Action), ktorej vstupným súborom bude zdrojový
-súbor a výstupným vygenerovaný objektový.
+prechádzame zoznam mien zdrojových súborov a z každého vytvoríme dvojicu objektov
+typu File, jeden reprezentujúci zdrojový súbor a druhý reprezentujúci vygenerovaný
+objektový súbor. Následne pre každú takúto dvojicu zdrojového a z neho vygenerovaného
+súboru vytvoríme akciu typu CompileCAction (rozhrania Action), ktorej vstupným
+súborom bude zdrojový súbor a výstupným vygenerovaný objektový.
 
-Následne vytvoríme súbor reprezentujúci vytváranú knižnicu ako celok (typu GeneratedFile),
+Následne vytvoríme súbor reprezentujúci vytváranú knižnicu ako celok (typu File),
 ktorý bude výstupným súborom prislúchajúcej akcie typu ArLinkAction (rozhrania Action).
 V predchádzajúcom kroku vygenerované objektové súbory použijeme ako vstupné
 súbory pre túto akciu. Implementačné detaily uvedieme v listingu~\ref{lst:target2action:libc}.
 
 \begin{listing}[H]
-  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=48,lastline=73]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=48,lastline=74]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
   \caption{Metóda GetOutputFile triedy LibCTarget}
   \label{lst:target2action:libc}
 \end{listing}
@@ -161,12 +170,12 @@ súbory pre túto akciu. Implementačné detaily uvedieme v listingu~\ref{lst:ta
 Metóda sa na zdrojových súboroch správa rovnako ako v triede LibCTarget. Po
 vytvorení takejto knižnice prejdeme rekurzívne závislosti a ich výstupné
 súbory, spolu s práve vytvorenou knižnicou predáme ako vstupné súbory
-akcii LinkAction (rozhrania Action), ktorej výstupným súborom (typu GeneratedFile)
+akcii LinkAction (rozhrania Action), ktorej výstupným súborom (typu File)
 je požadovaná spustiteľná aplikácia. Implementačné detaily sa nachádzajú v
 listingu~\ref{lst:target2action:appc}.
 
 \begin{listing}[H]
-  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=91,lastline=129]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
+  \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=92,lastline=131]{go}{/home/pepol/src/imterra/forge/client/target/target.go}
   \caption{Metóda GetOutputFile triedy AppCTarget}
   \label{lst:target2action:appc}
 \end{listing}
@@ -320,3 +329,21 @@ na disk. V prípade akýchkoľvek problémov signalizuje chybu. Výsledok proced
 popisuje štruktúra FileResponse v listingu~\ref{lst:rpc:fileargs}, ktorá okrem mena
 súboru a kontrolného súčtu údajov obsahuje tiež informáciu, či táto požiadavka
 prepísala existujúci súbor.
+
+\subsection{RPC služba Util}
+\label{sec:slave:rpc:util}
+
+Služba Util je určená na poskytovanie rôznych pomocných procedúr, najmä procedúr
+uľahčujúcich distribúciu úloh. V rámci tejto služby poskytujeme nasledovné
+procedúry:
+
+\subsubsection{NumTasks}
+
+Jednoduchá procedúra, pomocou ktorej sprístupňujeme informáciu o maximálnom
+povolenom množstve simultánne bežiacich úloh na komponente. Túto informáciu
+využíva Master na zefektívnenie distribúcie úloh, ako sme opísali v~\ref{sec:master:distribution}.
+
+Vzhľadom na limitácie RPC protokolu, procedúra vyžaduje aspoň jeden argument. Rozhodli
+sme sa preto použiť najzákladnejší typ integer, ktorého hodnota je ignorovaná. Návratovou
+hodnotou procedúry je taktiež integer, maximálny počet úloh, ako je definovaný pri
+spustení Slave komponentu.
