@@ -183,9 +183,66 @@ listingu~\ref{lst:target2action:appc}.
 \subsection{Distrib\'{u}cia akci\'{i}}
 \label{sec:master:distribution}
 
-% TODO: Describe MakeFile and TBA function to determine which worker to choose.
-% Mention problems that happened and why we needed to add semaphore for file to
-% get rid of them.
+Na účely vykonania všetkých akcií a získania výstupneho súboru pre každý cieľ sme
+implementovali funkciu MakeFile. Táto funkcia sa spúšťa asynchrónne s informáciami
+o tom aký súbor sa má získať, aké nastavenia sa pritom majú použiť. Súčasťou je
+aj určenie kanálu (dátový typ chan), ktorý sa použije na informovanie volajúceho
+o úspešnom získaní súboru. V prípade akejkoľvek chyby funkcia signalizuje chybu,
+oznámi ju používateľovi a spôsobi ukončenie behu aplikácie.
+
+\subsubsection{Získanie vstupných súborov}
+
+Funkcia funguje rekurzívne, v prípade, že súbor sa dá získať spustením akcie, ju
+najprv asynchrónne zavoláme na vstupné súbory tejto akcie a počkáme, kým všetky
+úspešne skončia.
+
+\subsubsection{Zabránenie opakovanej kompilácii}
+
+Kedže chceme zabrániť opakovanej kompilácii, pokiaľ sa vstupné súbory nezmenili,
+v ďalšom kroku skontrolujeme novosť súborov. Za týmto účelom máme v koreňovom
+adresári skrytú zložku \texttt{.metadata}, ktorá obsahuje súborovú štruktúru
+ekvivalentnú s projektami. Každý súbor, nazvaný rovnako ako jeho ekvivalent s ktorým
+pracujeme obsahuje iba textovú informáciu, SHA512 kontrolný súčet obsahu súboru
+počas jeho predchádzajúceho použitia. Tieto informácie zapisujeme po ukončení vykonávania
+všetkých akcií, tesne pred ukončením behu aplikácie. Takto získaný kontrolný súčet
+porovnáme s kontrolným súčtom existujúceho súboru a v prípade, že sa tieto líšia,
+vykonáme akciu. V prípade neexistencie súboru je akcia vykonaná tiež.
+
+\subsubsection{Výber Slave komponentu na vykonanie akcie}
+
+% TODO describe worker selection
+
+\subsubsection{Vykonanie akcie}
+
+Master komponent pred samotným vykonaním akcie musí zabezpečiť, aby volaný Slave
+mal prístup ku všetkým súborom, ktoré akcia potrebuje na úspešné vykonanie. To
+zabezpečujeme pomocou metódy SendFile RPC služby File, ktorú popisujeme v časti~\ref{sec:slave:rpc:file}.
+V prípade používania lokálne bežiaceho Slave komponentu, je táto časť vynechaná.
+
+Po úspešnom odoslaní všetkých súborov je akcia vykonaná zavolaním ekvivalentnej metódy
+RPC služby Task na komponente. Túto službu, vrátane metód pre jednotlivé akcie popisujeme
+v časti~\ref{sec:slave:rpc:task}.
+
+V prípade, že volaný komponent nebeží lokálne, následne vyžiadame obsah vytvoreného
+súboru pomocou metódy RecvFile služby File. Následne tento obsah zapíšeme do nášho
+pracovného priečinka, informujeme volajúceho o úspešnom skončení a ukončíme beh funkcie.
+
+\subsubsection{Problémy a riešenia}
+
+Najväčším problémom s ktorým sme sa stretli bolo zabezpečenie, aby akcie neboli
+volané viac krát, v prípade, že niekoľko rôznych súborov záleží na rovnakom
+súbore. Kedže systém je implementovaný ako vysoko paralelný, vznikol tu potenciálny
+kritický súbeh (race condition), kedy by sa počas vykonávania akcie na Slave komponente
+spustilo vykonávanie akcie v inom vlákne.
+
+Na zabránenie tomuto problému sme zjednotili objekty súborov pre celú aplikáciu a prístup
+k nim synchronizovali pomocou zamykacej techniky semafórov.
+
+Na zabezpečenie efektívnejšieho spracovania sme tiež v rámci kritickej sekcie, po spustení
+vykonávania akcie zabezpečili, aby ďalšie volania funkcie MakeFile považovali vytvorený
+súbor za zdrojový a teda sa nepokúšali vykonávať akcie spojené s jeho získaním. V údajovom
+type File sme toto dosiahli nastavením smerníku na akciu na \texttt{nil}, čo je v jazyku
+Go reprezentácia prázdneho smerníku.
 
 \section{Slave}
 \label{sec:slave}
@@ -199,7 +256,7 @@ V nasledujúcich častiach si popíšeme jednotlivé služby a procedúry ktoré
 poskytujú.
 
 \subsection{RPC služba Task}
-\label{sec:slave:rpc:action}
+    \label{sec:slave:rpc:task}
 
 Služba Task poskytuje procedúry na vykonávanie úloh priamo súvisiacich so
 splnením cieľa. Tieto úlohy su ekvivalentné akciám na strane Master komponentu.
