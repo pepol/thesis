@@ -7,14 +7,146 @@ ich výhody a nevýhody.
 \section{Go}
 \label{sec:golang}
 
-\subsection{SimplaYAML}
-\label{sec:golang:simpleyaml}
+Jazyk Go je kompilovaný, staticky typovaný programovaný jazyk pôvodne vyvinutý
+spoločnosťou Google. Jeho syntax vychádza zo syntaxe jazyka C. Jazyk poskytuje
+automatickú správu pamäte (garbage collection), limitované prvky objektovo orientovaného
+programovania a podporuje súbežnosť na báze komunikujúcich súbežných procesov.\cite{GolangFeatures}
 
-\subsection{gob}
-\label{sec:golang:gob}
+\subsection{Objektovo orientované programovanie}
+\label{sec:golang:oop}
+
+Jazyk Go nepodporuje existenciu objektov v štýle OOP jazykov ako Java. Namiesto toho
+sa OOP v jazyku Go implementuje pomocou štruktúr a metód s tzv.\ typovým prijímačom
+(method receiver). Príklad uvádzame v listingu~\ref{lst:golang:receivers}. Funkcia
+Area je metódou typu Square.
+
+\begin{listing}[h]
+  \begin{minted}[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize]{go}
+    type Square struct {
+            side float64
+    }
+
+    func (sq Square) Area() float64 {
+            return sq.side * sq.side
+    }
+  \end{minted}
+  \caption{Ukážka implementácie metódy v jazyku Go.}
+  \label{lst:golang:receivers}
+\end{listing}
+
+Zapuzdrenie sa v Go rieši pomocou exportovaných a neexportovaných prvkov štruktúry.
+Táto konvencia sa netýka iba štruktúr, ale aj funkcií exportovaných v rámci modulu.
+Názvy exportovaných metód a prvkov začínajú veľkým písmenom. Pri použití neexportovanej
+časti modulu, alebo štruktúry skončí kompilácia programu chybou.
+
+\begin{listing}[h]
+  \begin{minted}[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize]{go}
+    import "math"
+
+    type Shape interface {
+            Area() float64
+    }
+
+    type Square struct {
+            side float64
+    }
+
+    func (sq Square) Area() float64 {
+            return sq.side * sq.side
+    }
+
+    type Circle struct {
+            radius float64
+    }
+
+    func (c Circle) Area() float64 {
+            return math.Pi * math.Pow(c.radius, 2)
+    }
+  \end{minted}
+  \caption{Použitie rozhrania na implementáciu dedičnosti v jazyku Go.}
+  \label{lst:golang:inheritance}
+\end{listing}
+
+Dedičnosť sa v Go rieši dvomi spôsobmi. Prvým z nich je použitie skladania, kedy sa
+do podtriedy vloží anonymný prvok nadtriedy, z ktorej dedíme. Toto umožňuje kompozíciu
+a delegáciu objektov. Druhým spôsobom je definícia rozhrania (interface). Rozhranie je
+popísanie skupiny funkcií. Akýkoľvek typ, ktorý implementuje všetky funkcie rozhrania
+je považovaný za objekt tohto rozhrania. Kontrola, či objekt spĺňa
+požiadavky rozhrania nastáva v jazyku Go počas kompilácie, vývojári jazyka túto
+metódu nazývajú štruktúralne typovanie a vychádza z protokolov jazyka Smalltalk.\cite{GolangInterface}
+Príklad uvádzame v listingu~\ref{lst:golang:inheritance}.
+Rozhranie Shape vyžaduje implementáciu funkcie Area, ktorú implementuje aj typ Square,
+aj typ Circle a teda obe môžeme použiť ako objekt typu Shape. 
+
+\subsection{Súbežnosť v jazyku Go - Goroutines, channels}
+\label{sec:golang:concurrency}
+
+Jednou z veľkých výhod jazyka Go oproti iným jazykom určeným na podobné použitie,
+ako je C++ je vstavaná podpora pre súbežnosť, ktorá sa dá dosiahnuť použitím
+dvoch vlastností jazyka, tzv.\ goroutines a údajového typu kanál (channel).
+
+Goroutine je funkcia, ktorá sa volá pomocou kľúčového slova \texttt{go}. Táto
+funkcia je spustená v samostatnom ľahkom vlákne. Tieto vlákna ale nemôžeme považovať
+za ekvivalent vlákien - threads, v OS, kedže sú oveľa lacnejšie na vytvorenie a použitie.
+V implementácii sú takto bežiace goroutines multiplexované na reálne thready OS bežiacej
+aplikácie.
+
+Na synchronizáciu medzi goroutines sa používa údajový typ kanál (channel). Jedná sa o
+implementáciu dátovej štruktúry rad (queue) so správnou synchronizáciou prístupu,
+aby sa zabránilo kritickým súbehom. Súčasťou definície každého kanálu je aj údajový
+typ, ktorého objekty sa pomocou neho posielajú. Kanál má určenú kapacitu, prednastavená
+je hodnota 1. V prípade pokusu o zápis do plného kanálu táto operácia blokuje, tak isto
+ako pri pokuse o čítaní z prázdneho kanálu. Vzhľadom na to je jednoduché implementovať
+napríklad synchronizáciu pomocou semafórov.
 
 \subsection{RPC}
 \label{sec:golang:rpc}
 
+Súčasťou štandardnej knižnice jazyka Go je aj modul \texttt{net/rpc}, ktorý implementuje
+volanie vzdialených procedúr (remote procedure call - RPC). Táto služba umožňuje, zavolať
+registrované funkcie na vzdialenom serveri, ku ktorému máme prístup iba cez internet.
+
+Na funkcie ktoré je takto možné volať sú kladené nasledovné nároky:
+
+\begin{itemize}
+  \item Funkcia musí byť metódou exportovaného typu
+  \item Funkcia musí byť exportovaná
+  \item Funkcia musí akceptovať 2 argumenty, oba exportovaného alebo vstavaného typu
+  \item Druhý argument funkcie musí byť smerník
+  \item Návratový typ funkcie musí byť typ \texttt{error}
+\end{itemize}
+
+Modul RPC podporuje niekoľko protokolov na prenos údajov, vrátane možnosti implementovať
+vlastný. Medzi najpoužívanejľie patrí HTTP, prípadne TCP s použitím gob kódovania údajov.
+Ďalší rozšírený formát na prenos údajov je JSON.
+
+\subsection{Serializačný formát gob}
+\label{sec:golang:gob}
+
+Gob je formát na prenos binárnych údajov cez sieť. Používa sa napríklad
+pri RPC službe na prenos objektov jazyka Go. Je samo-popisujúci, každý prvok obsahuje
+okrem údajov aj popis jeho typu. Tento formát vychádza dizajnovo z formátu Protocol
+Buffers od spoločnosti Google. Viac informácii o serializácii a význame serializovaných
+dát je uvedené v \cite{GolangGobs}.
+
+\subsection{SimpleYAML}
+\label{sec:golang:simpleyaml}
+
+SimpleYAML\cite{GolangSimpleyaml} je knižnica pre jazyk Go, určená na prácu s
+textovým formátom YAML\@. Jedná sa o veľmi jednoduchú knižnicu, ktorá z textovej
+reprezentácie vo formáte YAML vytvorí ekvivalentné natívne objekty jazyka Go.
+
 \section{YAML}
 \label{sec:yaml}
+
+YAML je dátový serializačný jazyk, ktorý je ale zároveň aj čitateľný pre ľudí, čo
+z neho robí ideálny jazyk pre použitie nielen na prenos údajov, ale napríklad aj na
+použitie v konfiguračných súboroch.
+
+Od verzie 1.2 je YAML oficiálne spätne kompatibilný s jazykom JSON\cite{YAMLJSONCompat}, čo znamená,
+že parser jazyka YAML dokáže parsovať aj akýkoľvek JSON dokument.
+
+Základnými údajovými typmi jazyka sú, podobne ako v JSON: polia, asociatívne polia, reťazce a z nich
+vytvorené zložitejšie vnorené štruktúry. Okrem toho jazyk YAML umožňuje používanie spätných
+referencií alebo definíciu používateľských typov (závisle od parsera). Všetky vlastnosti, vrátane
+syntaxe popisuje voľne dostupná špecifikácia jazyka \cite{YAMLSpec}.
