@@ -111,46 +111,21 @@ distribuovanej kompilácie, ktorá je popísaná vo vyššie spomínanej sérii 
 \label{sec:solution}
 V tejto časti popíšeme jednotlivé komponenty systému a ich funkcionalitu.
 
-\subsection{Master}
-\label{sub:solution:master}
-Aplikáciu bude predstavovať program, bežiaci na užívateľskom počítači. Tento program
-nazvime {\it master}.
-
-Úlohou mastera bude v okamihu zavolania a špecifikovania cieľa kompilácie spracovať
-konfiguráciu cieľov daného projektu a vytvoriť strom závislostí. Následne master
-kontaktuje jednotlivé {\it slave} \/komponenty bežiace na rôznych strojoch (lokálny
-počítač, serverová farma a pod.) a rozdistribuuje ciele na tieto počítače čo možno
-najefektívnejšie.
-
-Pokiaľ cieľ alebo podciele závisia na vonkajšom projekte a repozitár tohto projektu
-je dostupný, tento projekt je stiahnutý a použitý. V prípade nedostupnosti niektorej
-zo závislostí program ukončí beh s chybovou hláškou.
-
-\subsection{Slave}
-\label{sub:solution:slave}
-Slave je program starajúci sa o vykonávanie úloh zadaných masterom. Na fyzickom počítači,
-či už lokálnom, alebo na serveri bude bežať zvyčajne niekoľko slave programov, nakoľko
-jeden slave program bude navrhnutý na vykonávanie úloh pre práve jeden cieľ. Keď voľný
-slave obdrží úlohu, v prvom kroku sa pozrie do zdieľaného úložiska objektov, ak je
-toto dostupné, či už žiadaný súbor neexistuje. V prípade jeho existencie slave
-pošle výsledný súbor priamo masterovi a nebude vykonávať kompiláciu. V prípade
-neexistencie výsledného súboru v žiadanej verzii bude cieľ preložený na postupnosť
-akcií a tieto budú vykonané.
-
-\subsection{\'{U}lo\v{z}isko objektov}
-\label{sub:solution:storage}
-Úložisko objektov slúži ako cache na zabránenie opakovanej kompilácii rovnakých
-súborov. Výsledné súbory tu budú nahrané po dokončení kompilácie slave programom.
-Ukladanie bude prebiehať podľa názvu zdrojového súboru a jeho kontrolného súčtu,
-aby sa ľahko rozlíšili rôzne verzie súboru, napríklad lokálne modifikovaná od
-tzv. HEAD verzie\footnote{najnovšia verzia nahraná zverejnená v hlavnom repozitári}.
-
-V prípade nášho úložiska sme sa rozhodli použiť na kontrolné súčty hashovaciu funkciu
-SHA512, kvôli čo najväčšej minimalizácii kolízií.
-
 \subsection{Ciele kompil\'{a}cie}
 \label{sub:solution:targets}
-Ciele kompilácie delíme nasledovne:
+
+Kompilovaný projekt delíme na ciele kompilácie (anglicky targets), ktoré definujú
+jednotlivé základné stavebné prvky objektu. Každý cieľ má určený svoj typ, napríklad
+aplikácia písaná v jazyku C, alebo knižnica funkcií jazyka C++. Okrem typu môžeme
+cieľu určiť závislosť na splnení iných cieľov, alebo špecifikovať vstupné zdrojové
+súbory a súbory prostriedkov.
+
+Výsledkom splnenia každého cieľa kompilácie je generovaný súbor. Tento súbor vzniká
+aplikáciou pravidiel (akcií) na zdrojové súbory cieľa alebo iných generovaných súborov.
+Jeden cieľ môže špecifikovať aj postupnosť niekoľkých pravidiel.
+
+Z grafu závislostí medzi cieľmi kompilácie sa vytvorí bipartitný graf pravidiel a súborov,
+ktorý popisujeme nižšie.
 
 \subsubsection{Zdrojové súbory}
 Toto sú súbory, ktoré sa nachádzajú priamo v repozitári projektu, sú vytvorené
@@ -188,7 +163,42 @@ takéhoto grafu.
 Takto zostrojený graf bude potom použitý slave komponentmi na vytvorenie výstupných
 súborov s použitím pravidiel a príkazov ktoré so sebou nesú.
 
-\newpage
+\subsection{Master}
+\label{sub:solution:master}
+Aplikáciu bude predstavovať program, bežiaci na užívateľskom počítači. Tento program
+nazvime {\it master}.
+
+Úlohou mastera bude v okamihu zavolania a špecifikovania cieľa kompilácie spracovať
+konfiguráciu všetkých cieľov daného projektu a vytvoriť strom závislostí. Následne master
+kontaktuje jednotlivé {\it slave} \/komponenty bežiace na rôznych strojoch (lokálny
+počítač, serverová farma a pod.) a rozdistribuuje ciele na tieto počítače čo možno
+najefektívnejšie.
+
+Pokiaľ cieľ alebo podciele závisia na vonkajšom projekte a repozitár tohto projektu
+je dostupný, tento projekt je stiahnutý a použitý. V prípade nedostupnosti niektorej
+zo závislostí program ukončí beh s chybovou hláškou.
+
+\subsection{Slave}
+\label{sub:solution:slave}
+Slave je program starajúci sa o vykonávanie úloh zadaných masterom. Na fyzickom počítači,
+či už lokálnom, alebo na serveri bude bežať zvyčajne niekoľko slave programov, nakoľko
+jeden slave program bude navrhnutý na vykonávanie úloh pre práve jeden cieľ. Keď voľný
+slave obdrží úlohu, v prvom kroku sa pozrie do zdieľaného úložiska objektov, ak je
+toto dostupné, či už žiadaný súbor neexistuje. V prípade jeho existencie slave
+pošle výsledný súbor priamo masterovi a nebude vykonávať kompiláciu. V prípade
+neexistencie výsledného súboru v žiadanej verzii bude cieľ preložený na postupnosť
+akcií a tieto budú vykonané.
+
+\subsection{\'{U}lo\v{z}isko objektov}
+\label{sub:solution:storage}
+Úložisko objektov slúži ako cache na zabránenie opakovanej kompilácii rovnakých
+súborov. Výsledné súbory tu budú nahrané po dokončení kompilácie slave programom.
+Ukladanie bude prebiehať podľa názvu zdrojového súboru a jeho kontrolného súčtu,
+aby sa ľahko rozlíšili rôzne verzie súboru, napríklad lokálne modifikovaná od
+tzv. HEAD verzie\footnote{najnovšia verzia zverejnená v hlavnom repozitári}.
+
+V prípade nášho úložiska sme sa rozhodli použiť na kontrolné súčty hashovaciu funkciu
+SHA512, kvôli čo najväčšej minimalizácii kolízií.
 
 \subsection{Dostupnosť zdrojových súborov}
 \label{sub:solution:source}
