@@ -11,20 +11,116 @@ nových typov cieľov a akcií.
 \subsection{Prerekvizity}
 \label{sec:installation:dependencies}
 
+Aplikácia nepotrebuje pre svoj beh žiadnu externú aplikáciu, kedže jazyk Go linkuje
+spustiteľné súbory staticky.
+
+Pre inštaláciu zo zdrojových súborov je potrebovaný kompilátor jazyka Go vo verzii
+aspoň 1.4.2. Návod na inštaláciu je na stránke \url{https://golang.org/dl/}. Taktiež
+program potrebuje knižnicu simpleyaml. Je dostupná na stiahnutie na stránke
+\url{https://github.com/smallfish/simpleyaml/} alebo pomocou príkazu:
+\verb!go get github.com/smallfish/simpleyaml!.
+
+Zdrojový kód aplikácie sa nachádza na stránke \url{https://github.com/imterra/forge},
+získať sa dá napríklad pomocou príkazu \verb!git clone https://github.com/imterra/forge.git!.
+
 \subsection{Master}
 \label{sec:installation:master}
+
+Zdrojové kódy Master komponenta sa nachádzajú v priečinku \texttt{client/}. Pre jeho
+kompiláciu potrebujeme v tomto priečinku spustiť príkaz \verb!go build!. Tento príkaz
+vytvorí binárny spustiteľný súbor \texttt{client}, ktorý nainštalujeme nakopírovaním
+do niektorého z priečinkov v premennej \texttt{PATH} a premenovaním na \texttt{forge}.
 
 \subsection{Slave}
 \label{sec:installation:slave}
 
+Inštalácia Slave komponentu je ekvivalentná k inštalácii Master komponentu, ktorú
+sme popísali v časti~\ref{sec:installation:master}.
+
+Slave komponent sa nachádza v priečinku \texttt{worker/} a jeho kompiláciu dosiahneme
+spustením príkazu \verb!go build!. Tento príkaz vytvorí spustiteľný binárny súbor
+\texttt{worker}, ktorý prekopírujeme do priečinku z premennej \texttt{PATH} a premenujeme
+na \texttt{forge-server}.
+
 \section{Konfigur\'{a}cia}
 \label{sec:configuration}
+
+V tejto časti popisujeme spôsoby nastavenia oboch komponentov. Ako prvý uvádzame Slave
+komponent, kedže Master vyžaduje aspoň jeden bežiaci Slave komponent na svoju činnosť.
 
 \subsection{Slave}
 \label{sec:configuration:slave}
 
+Slave komponent nemá vo verzii 1.0 implementované nastavenia cez konfiguračný
+súbor. Všetky nastavenia sa určujú pri spustení, cez štandardné argumenty príkazového
+riadka.
+
+Každý z argumentov sa pri volaní definuje vo forme \texttt{--nazov=hodnota}, kde
+názov je meno argumentu a hodnota je hodnota ktorú mu chceme špecifikovať.
+
+\subsubsection{jobs}
+
+Určuje maximálny počet súčasne bežiacich kompilačných procesov. Prednastavená hodnota
+je rovnaká ako počet CPU jadier na počítači.
+
+\subsubsection{port}
+
+Určuje TCP port, na ktorom Slave prijíma volania RPC služby pre vykonanie úloh.
+Táto hodnota je potrebná pri definovaní adresy Slave komponentu na strane Mastera.
+Prednastavená hodnota je 1103.
+
+\subsubsection{root}
+
+Určuje koreňovú zložku projektov na serveri. V rámci tejto zložky sa ukladajú všetky
+súbory ktoré Slave prijme, alebo vytvorí. Pokiaľ by hodnota argumentu nebola nastavená,
+použije sa hodnota premennej prostredia \texttt{FORGE\_ROOT}. V prípade, že ani premenná
+prostredia nie je nastavená, prednastavenou hodnotou je priečinok \texttt{forge/} v domovskom
+adresári používateľa, ktorý Slave komponent spustil. Priečinok takto určený musí existovať.
+
 \subsection{Master}
 \label{sec:configuration:master}
+
+Master komponent používa konfiguračný súbor vo formáte YAML, ktorý sa, pokiaľ
+nie je povedané inak, nazýva \texttt{.forge.yaml} a nachádza sa v domovskom adresári
+používateľa spúšťajúceho Master komponent. V prípade jeho neexistencie sa pokúsime
+získať nastavenia z globálneho súboru \texttt{/etc/forge.yaml}. Konfiguračný súbor
+nie je vyžadovaný na úspešné spustenie aplikácie.
+
+Tento súbor môže špecifikovať rovnaké hodnoty ako argumenty na príkazovom riadku, ktoré
+sú mu však nadradené.
+
+\subsubsection{jobs}
+
+Toto nastavenie špecifikuje počet súčasne bežiacich úloh pre lokálne spustený
+Slave komponent. Pokiaľ je toto číslo nastavené na 0, lokálny komponent sa nespúšťa.
+Prednastavenou hodnotou je počet jadier CPU na lokálnom počítači.
+
+\subsubsection{root}
+
+Určuje koreňovú zložku projektov na serveri. Všetky súbory projektov vyžadované
+na kompiláciu sa musia nachádzať v tejto zložke a ich cesty musia byt v BUILD súboroch
+špecifikované relatívne k nej. V prípade nešpecifikovania tohto argumentu na príkazovom
+riadku sa použije premenná prostredia \texttt{FORGE\_ROOT}, v prípade jej neexistencie
+sa použije nastavenie z konfiguračných súborov. V prípade, neexistencie konfiguračných
+súborov sa ako koreňová zložka použije priečinok \texttt{.forge/} z domovského
+adresára používateľa.
+
+\subsubsection{worker}
+
+Určuje adresy Slave komponentov (okrem lokálneho ak sa tento spúšťa automaticky), ktoré
+sa majú použiť pri kompilácii. Adresy sa uvádzajú v štandardnom tvare \texttt{adresa:port}, kde
+adresa je buď IP alebo DNS adresa servera.
+
+Na príkazovom riadku môže byť viac Slave komponentov uvedených použitím niekoľkých argumentov
+worker, alebo ako čiarkami oddelený zoznam pre jeden argument.
+
+\begin{verbatim}
+forge --worker=slave1.workers.com:1103,slave2.workers.com:1103
+forge --worker=slave1.workers.com:1103 --worker=slave2.workers.com:1103
+\end{verbatim}
+
+V prípade konfiguračného súboru sa zoznam Slave komponentov určuje ako
+zoznam jazyka YAML pod hlavičkou \texttt{worker}.
 
 \section{BUILD s\'{u}bory}
 \label{sec:buildfiles}
