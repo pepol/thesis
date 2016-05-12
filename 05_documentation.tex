@@ -125,8 +125,122 @@ zoznam jazyka YAML pod hlavičkou \texttt{worker}.
 \section{BUILD s\'{u}bory}
 \label{sec:buildfiles}
 
+BUILD súbory popisujú vzťahy medzi súbormi v projekte ako sériu cieľov, ktorých
+splnením sa splní požadovaná úloha, najčastejšie kompilácia. Ako formát týchto
+súborov sme použili formát YAML, ktorý sme popísali v časti~\ref{sec:yaml}.
+
+\begin{listing}
+  \inputminted[frame=lines, framesep=2mm,linenos,fontsize=\scriptsize,firstline=1,lastline=13]{yaml}{/home/pepol/src/auvm/build.yaml}
+  \caption{Ukážka BUILD súboru projektu auvm}
+  \label{lst:buildfile}
+\end{listing}
+
+Na listingu~\ref{lst:buildfile} sme uviedli príklad BUILD súboru projektu auvm\footnote{\url{https://github.com/pepol/auvm}}.
+
+\subsection{Defin\'{i}cia cie\v{l}a}
+\label{sec:buildfiles:targetdef}
+
+Definíciou cieľa je asociatívne pole, ktorého kľúče a s nimi asociované hodnoty, spoločne
+s názvom cieľa, presne popisujú každý cieľ. Teraz popíšeme všetky povolené kľúče.
+
+\subsubsection{type}
+
+Jediná informácia vyžadovaná v akomkoľvek cieli, popisuje výsledky aj podmienky pre
+splnenie daného cieľa. V súčasnej verzii podporujeme ciele typu \texttt{lib\_c} pre
+knižnice jazyka C a \texttt{app\_c} pre spustiteľné aplikácie v jazyku C.
+
+Výsledkom splnenia cieľa typu \texttt{lib\_c} je súbor s názvom \texttt{nazovcieľa.a}
+obsahujúci staticky linkované objektové súbory, ktoré vzniknú kompiláciou zdrojových
+súborov.
+
+Po splnení cieľa s typom \texttt{app\_c} je spustiteľný súbor s rovnakým názvom
+ako je názov cieľa. Tento súbor vznikne zlinkovaním knižníc špecifikovaných
+ako závislosti a skompilovaných zdrojových súborov.
+
+\subsubsection{sources, resources}
+
+Hodnoty \texttt{sources} a \texttt{resources} sú polia jazyka YAML obsahujúce
+za sebou vymenované mená súborov. Povolené a podporované je určenie súborov v adresári
+BUILD súboru alebo jeho podadresároch pomocou určenia cesty relatívnej k polohe
+BUILD súboru.
+
+V prípade typu cieľa v jazyku C sa každý súbor z poľa \texttt{sources} samostatne skompiluje
+do objektového súboru, následne sú všetky tieto súbory zlinkované do statickej knižnice a, v prípade
+typu aplikácie, následne zlinkované s výstupmi cieľov, na ktorých tento cieľ závisí, vytvárajúc
+spustiteľnú aplikáciu.
+
+Pre ciele v jazyku C sa súbory z poľa \texttt{resources} používajú na určenie nekompilovaných
+súborov, ktoré sú ale ku kompilácii potrebné. Jedná sa napríklad o hlavičkové súbory jazyka
+C. Súbory v tomto poli sú totižto iba prenesené na kompilujúci počítač, prípadne pri
+opätovnej kompilácii je aj ich obsah kontrolovaný voči zmenám.
+
+\subsubsection{dependencies}
+
+Pole \texttt{dependencies} obsahujé názvy cieľov, ktorých splnenie je predpokladom
+k úspešnému splneniu aktuálneho cieľa. Meno cieľa môže byť uvedené buď ako meno cieľa
+z rovnakého BUILD súboru, alebo ako meno cieľa definovaného v niektorom z podpriečinkov.
+
+V prípade, že projekt závisí na externej knižnici a táto tiež používa systém Forge,
+môžeme ju špecifikovať pomocou plne kvalifikovaného mena cieľa (FQTN\footnote{Fully-Qualified Target Name}).
+Tvar FQTN popisujeme v časti~\ref{sec:buildfiles:fqtn}.
+
+\subsection{Plne Kvalifikovan\'{e} Meno Cie\v{l}a - FQTN}
+
+Každý cieľ má meno, ktoré musí byť unikátne v rámci BUILD súboru v ktorom je definovaný.
+Avšak nemôžeme vyžadovať, aby mená boli unikátne medzi všetkými projektmi, ktoré na
+sebe vzájomne závisia. Preto systém Forge obsahuje tzv. FQTN, plne kvalifikované meno
+cieľa. V princípe je FQTN ekvivalentné absolútnej ceste v priečinkovej štruktúre v OS UNIX\@.
+Na rozlíšenie od absolútnej cesty sme rozhodli, že FQTN začína dvomi znakmi lomítka (\texttt{//}),
+za ktorými nasleduje postupnosť mien priečinkov v tomto virtuálnom priečinkovom strome, oddelených
+znakmi lomítka. Príkladmi FQTN sú napríklad: \texttt{//auvm/auvm}, \texttt{//auvm/lib/io}, alebo \\
+\texttt{//github/imterra/forge/client/client}.
+
+FQTN znižujú, ale neeliminujú úplne kolíziu mien cieľov, preto sme v časti~\ref{sec:buildfiles:bestpractices}
+uviedli rady určené najmä pre používateľov verejných úložísk zdrojových kódov.
+
+V prípade použitia systému Forge v rámci spoločnosti je odporúčané použiť doménové meno firmy
+ako prefix pre hierarchiu projektov. Príkladom je naša open-source organizácia Imterra, ktorej všetky
+FQTN začínajú s \texttt{//imterra/}.
+
+\subsubsection{FORGE\_ROOT, BUILD súbory a FQTN}
+
+V časti~\ref{sec:usage:client} popisujeme premennú prostredia \texttt{FORGE\_ROOT}, ktorá
+špecifikuje koreňový priečinok systému Forge na danom počítači. FQTN špecifikuje výskyt
+cieľa vzhľadom ku tomuto priečinku.
+
+Meno cieľa je časť FQTN za posledným lomítkom. Pre nájdenie definície cieľa sa cieľ
+s takýmto názvom hľadá v BUILD súbore, ktorý sa nachádza v podpriečinku \texttt{FORGE\_ROOT}
+určeným cestou končiacou posledným lomítkom FQTN\@. Teda pre FQTN \texttt{//imterra/forge/test/foo/bar}
+sa cieľ \texttt{bar} bude hľadať v súbore \\
+\texttt{\$FORGE\_ROOT/imterra/forge/test/foo/build.yaml}.
+
+\subsection{Odpor\'{u}\v{c}ania pre p\'{i}sanie BUILD s\'{u}borov}
+\label{sec:buildfiles:bestpractices}
+
+Pri písaní BUILD súborov odporúčame používať zjednodušený formát YAML a pre dobrú
+čitateľnosť nevyužívať spätnú kompatibilitu s jazykom JSON. Pokiaľ by ale súbor bol
+generovaný automatickým prevodom z iného formátu, je JSON formát akceptovateľný.
+
+Pri zverejňovaní projektov používajúcich Forge na verejných úložískách zdrojových
+kódov typu GitHub oporúčame používať FQTN začínajúce reťazcom \texttt{//github/USERNAME/REPOSITORY}\footnote{Adresa projektu na stránke bude \url{https://github.com/USERNAME/REPOSITORY}},
+kde \texttt{USERNAME} je používateľské meno (alebo názov organizácie), ktorá repozitár
+zverejnila a \texttt{REPOSITORY} je názov repozitára. Ekvivalentné pomenovanie odporúčame
+aj pre ďalšie hostingové služby. Toto umožňuje používateľom systému závislého na
+takto publikovanom systéme jednoducho stiahnuť zdrojové kódy bez potreby hľadania
+na internete.
+
+Pri formátovaní YAML súborov odporúčame využívať inline verziu zápisu poľa pre
+polia s malým počtom hodnôt, ale pre dlhé hodnoty, alebo veľký počet hodnôt odporúčame,
+pre zlepšenie čitateľnosti, definíciu poľa cez odrážky.
+
 \section{Pou\v{z}itie syst\'{e}mu na kompil\'{a}ciu}
 \label{sec:usage}
+
+\subsection{Slave}
+\label{sec:usage:server}
+
+\subsection{Master}
+\label{sec:usage:client}
 
 \section{Prid\'{a}vanie nov\'{y}ch cie\v{l}ov a akci\'{i}}
 \label{sec:contributing}
