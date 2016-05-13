@@ -17,11 +17,12 @@ spustiteľné súbory staticky.
 Pre inštaláciu zo zdrojových súborov je potrebovaný kompilátor jazyka Go vo verzii
 aspoň 1.4.2. Návod na inštaláciu je na stránke \url{https://golang.org/dl/}. Taktiež
 program potrebuje knižnicu simpleyaml. Je dostupná na stiahnutie na stránke
-\url{https://github.com/smallfish/simpleyaml/} alebo pomocou príkazu:
+\url{https://github.com/smallfish/simpleyaml/} alebo pomocou príkazu: \\
 \verb!go get github.com/smallfish/simpleyaml!.
 
 Zdrojový kód aplikácie sa nachádza na stránke \url{https://github.com/imterra/forge},
-získať sa dá napríklad pomocou príkazu \verb!git clone https://github.com/imterra/forge.git!.
+získať sa dá napríklad pomocou príkazu \\
+  \verb!git clone https://github.com/imterra/forge.git!.
 
 \subsection{Master}
 \label{sec:installation:master}
@@ -185,6 +186,7 @@ môžeme ju špecifikovať pomocou plne kvalifikovaného mena cieľa (FQTN\footn
 Tvar FQTN popisujeme v časti~\ref{sec:buildfiles:fqtn}.
 
 \subsection{Plne Kvalifikovan\'{e} Meno Cie\v{l}a - FQTN}
+\label{sec:buildfiles:fqtn}
 
 Každý cieľ má meno, ktoré musí byť unikátne v rámci BUILD súboru v ktorom je definovaný.
 Avšak nemôžeme vyžadovať, aby mená boli unikátne medzi všetkými projektmi, ktoré na
@@ -236,11 +238,97 @@ pre zlepšenie čitateľnosti, definíciu poľa cez odrážky.
 \section{Pou\v{z}itie syst\'{e}mu na kompil\'{a}ciu}
 \label{sec:usage}
 
+V tejto časti popisujeme spúšťanie a používanie systému Forge. Ako prvý uvádzame
+Slave komponent, kedže bežiaci Slave komponent je potrebný pre správnu funkcionalitu. 
+
 \subsection{Slave}
 \label{sec:usage:server}
+
+Slave komponent spúšťame, obvykle na serveri, pomocou príkazu \texttt{forge-server}.
+Nastavenia koreňového priečinku, portu na ktorom je dostupný a počtu kompilačných
+vlákien vykonávame podľa na to určených argumentov, ako sme uviedli v časti~\ref{sec:configuration:slave}.
+
+Slave komponent sa na rozdiel od tradičných démonov nespúšťa na pozadí, preto je
+odporúčané spustiť ho ako proces na pozadí pomocou operátora shellu \texttt{\&},
+ako sme ukázali v listingu~\ref{lst:example:slave}, prípadne
+pomocou zastavenia bežiaceho procesu a použitia príkazu \texttt{bg}.
+
+\begin{listing}
+  \begin{minted}[frame=lines,framesep=2mm,fontsize=\scriptsize]{sh}
+    ~> forge-server --jobs=4 --port=4200 --root=/tmp/forgebuild &
+  \end{minted}
+  \caption[Ukážka spustenia Slave komponentu]{Ukážka spustenia Slave komponentu na pozadí s neštandardnými nastaveniami}
+  \label{lst:example:slave}
+\end{listing}
 
 \subsection{Master}
 \label{sec:usage:client}
 
-\section{Prid\'{a}vanie nov\'{y}ch cie\v{l}ov a akci\'{i}}
+Pri spustení Master komponentu mu, okrem prípadných nastavení pomocou argumentov,
+ako uvádzame v časti~\ref{sec:configuration:slave}, zadávame aj názov cieľa alebo
+niekoľko cieľov (oddelených medzerami), ktoré vyžadujeme splniť. Ciele uvádzame
+pomocou ich FQTN, avšak, ak aktuálna pracovná zložka je podpriečinkom koreňového
+adresára systému, môžeme uviesť aj relatívnu cestu k cieľu, od pracovnej zložky.
+Obidva spôsoby adresácie sme ukázali v listingu~\ref{lst:example:master}.
+
+V prípade spustenia Master komponentu s nastaveným parametrom \texttt{jobs} na hodnotu
+inú ako 0, tento spustí ako podproces lokálny Slave komponent počúvajúci na porte 1103,
+ktorý je po ukončení vykonávania Master komponentu taktiež ukončený.
+
+\begin{listing}
+  \begin{minted}[frame=lines,framesep=2mm,fontsize=\scriptsize]{sh}
+    /home/user/src/foo> forge --root=/home/user/src --worker 10.0.1.7:1103 //auvm/auvm foo
+  \end{minted}
+  \caption[Ukážka kompilácie pomocou Forge]{Kompilácia cieľa auvm pomocou FQTN a lokálneho cieľa foo, s použitím vzdialeného Slave komponentu}
+  \label{lst:example:master}
+\end{listing}
+
+\section{Roz\v{s}irovanie funkcionality syst\'{e}mu}
 \label{sec:contributing}
+
+Dôležitou schopnosťou systému Forge musí byť rozšíriteľnosť. Preto v tejto časti popisujeme
+spôsoby na implementáciu 2 najčastejších rozšírení: akcií a typov cieľov.
+
+\subsection{Prid\'{a}vanie nov\'{y}ch akci\'{i}}
+\label{sec:contributing:actions}
+
+Implementácia novej akcie je prevedená najmä na strane Slave komponentu. Na jej sprístupnenie
+používateľom ju treba implementovať ako metódu typu \texttt{Task} z modulu \texttt{tasks}.
+Táto metóda musí spĺňať všetky kritériá pre metódu RPC služby. V prípade, že by
+typ \texttt{Task} nespĺňal všetky požiadavky pre akciu, napríklad neobsahuje isté
+informácie, je možné metódu implementovať na inom, novom, type, ktorý je ale potom
+potrebné zaregistrovať ako RPC službu v hlavnom module Slave komponentu.
+
+Na strane Master komponentu nie je akciu potrebné implementovať, je potrebné len
+uviesť správnu RPC metódu pri jej vytvárani z cieľa. Ako vytvoriť nový typ cieľa uvádzame
+v ďalšej časti.
+
+\subsection{Prid\'{a}vanie nov\'{y}ch typov cie\v{l}ov}
+\label{sec:contributing:targets}
+
+Pridávanie nových typov cieľov prebieha výlučne na strane Master komponentu. Na úspešnú
+implementáciu je potrebné pridať jeho podporu do spracovávnia BUILD súborov a následne
+definovať vytvorený objekt, tak aby tento spĺňal požiadavky rozhrania \texttt{Target}.
+
+Rozhranie \texttt{Target} vyžaduje implementáciu 5 metód, kde najdôležitejšia pre
+splnenie cieľa je metóda \texttt{GetOutputFile}, ktorá prekladá cieľ do grafu súborov
+a akcií na nich prevedených. Odporúčame nový cieľ implementovať pomocou typu
+definovaného v module \texttt{target}, kedže tento modul interne sprístupňuje
+hešovaciu tabuľku všetkých doteraz vytvorených súborov. Táto sa používa na zabránenie
+vytvorenia viacerých objektov typu \texttt{File}, ktoré reprezentujú rovnaký fyzický
+súbor a teda následné problémy s opakovanou kompiláciou. Táto tabuľka je dostupná
+ako modulu prístupná premenná \texttt{file\_list}. Jej kľúčmi sú cesty k súborom
+relatívne ku koreňovému adresáru systému Forge.
+
+Na sprístupnenie takto implementovaného typu cieľa tvorcom BUILD súboru, je potrebné
+o ňom informovať funkciu \texttt{ParseFile}, ktorá spracúva tieto súbory. Na konci
+funkcie sa nachádza \texttt{switch-case} výraz, ktorý na základe textovej reprezentácie
+typu cieľa v BUILD súbore vráti objekt potrebného typu. Na spracovanie YAML údajov,
+ktoré sú dostupné sme pre typy \texttt{lib\_c} a \texttt{app\_c} implementovali
+pomocné funkcie \texttt{MakeLibCTarget} a \texttt{MakeAppCTarget}. Odporúčame inšpirovať
+sa ich implementáciou pri tvorbe nových pomocných funkcií.
+
+Pre zjednodušenie vytvárania závislostí v podobe ďalších cieľov sme vytvorili
+funkciu \texttt{MakeDependencies}, ktorá z YAML údajov spracuje pole \texttt{dependencies}
+a následne opakovaným volaním funkcie \texttt{ParseFile}, vytvorí tieto ciele. Použitie
+tejto funkcie je silne odporúčané.
