@@ -2,4 +2,171 @@
 \label{ch:comp}
 
 V tejto kapitole otestujeme a porovnáme výkon systému na zdrojových kódoch
-existujúcich open-source projektov.
+existujúcich open-source projektov. Porovnáme čas behu kompilácie pomocou štandardného
+kompilačného programu GNU Make, pomocou Forge kompilujúceho iba lokálne a pomocou
+Forge kompilujúceho pomocou 2 Slave komponentov, jedného bežiaceho na lokálnom počítači
+a druhého bežiaceho na vzdialenom serveri.
+
+\section{V\'{y}ber projektov na testovanie}
+\label{sec:projectchoice}
+
+Kedže Forge podporuje zatiaľ iba kompiláciu zdrojových súborov jazyka C, rozhodli
+sme sa použiť projekt písaný iba v jazyku C. Druhým kritériom výberu bola jednoduchosť
+organizácie projektu a automatizovateľnosť tvorby BUILD súboru. Zároveň sme ale
+vyžadovali, aby bol projekt rozsiahly, vzhľadom na povahu testovania, kedy by pri
+malom, napríklad jednosúborovom projekte nebola distribúcia kompilácie použiteľná,
+prípadne by väčšiu rolu vo výsledkoch hralo aktuálne zaťaženie počítača, čím by sa
+skutočné výsledky skreslili.
+
+Pre testovanie sme vybrali projekt redis\footnote{\url{https://redis.io}}, ktorý
+spĺňal všetky naše požiadavky. Tento projekt na kompiláciu používa iba štandardný
+nástroj GNU Make, bez použitia GNU Autotools, čo značne zjednodušilo tvorbu BUILD
+súboru.
+
+\section{Postup testovania}
+\label{sec:process}
+
+Pre každú z testovaných konfigurácií sme spustili kompiláciu programu \texttt{redis-server}.
+Kompiláciu sme opakovali pre každý program 5 krát, aby sme zabránili skresleniu výsledkov
+kvôli vyťaženiu počítača. Všetky opakované kompilácie boli spúšťané na čistých zdrojových
+kódoch, aby sme zabezpečili reálne spustenie kompilácie.
+
+\subsection{Parametre testovania}
+\label{sec:process:params}
+
+Testovanie prebiehalo na laptope s operačnou pamäťou s kapacitou 16GB a dvojjadrovým procesorom Intel Core i7-5500U s
+frekvenciou 2.4GHz a podporou technológie HyperThreading, ktorá spôsobuje, že procesor je schopný pracovať
+ako štvorjadrový. Pri použití programu GNU Make, ako aj lokálneho Slave komponentu
+systému Forge sme preto nastavili počet pracujúcich vlákien na 4.
+
+Vzdialený Slave komponent bežal na serveri so štvorjadrovým procesorom Intel Atom C2750 s
+frekvenciou 2.4GHz a operačnou pamäťou s kapacitou 4GB.
+
+\subsection{Vytvorenie BUILD s\'{u}boru}
+\label{sec:process:buildfile}
+
+BUILD súbor pre projekt redis sme vytvorili na základe originálneho súboru Makefile,
+ktorý sa štandardne používa pri kompilácii pomocou nástroja GNU Make. Tento súbor
+obsahuje pravidlo, ktoré zabezpečí generáciu tzv.\ súboru závislostí, popisujúceho
+všetky súbory, ktoré zdrojový súbor jazyka C používa pomocou direktívy \texttt{\#include}.
+
+Takto vytvorený súbor závislostí sme potom skriptom \texttt{dep2buildfile.sh}\footnote{Tento skript je zverejnený spolu so zdrojovými kódmi programu Forge}
+skonvertovali na takmer hotový BUILD file. Tento skript ale vygeneruje len ciele pre jednotlivé knižnice
+programu. Následne sme pridali ďalší cieľ reprezentujúci výslednú aplikáciu \texttt{redis-server},
+ktorá závisela na knižniciach, podľa špecifikácie cieľa \texttt{redis-server} v súbore Makefile.
+
+\subsection{Meranie \v{c}asu}
+\label{sec:process:time}
+
+Meranie času sme zabezpečili pomocou štandardnej utility OS Linux time\footnote{\url{http://linux.die.net/man/1/time}}.
+Táto utilita na príkazovom riadku očakáva príkaz, ktorého čas vykonávania meria. Okrem celkového
+času vykonávania zbiera aj hodnoty o vyťažení CPU (toto vyťaženie môže dosiahnuť
+maximálne hodnotu $N\times100\%$, kde N je počet logických CPU na počítači.
+
+\section{V\'{y}sledky testovania}
+\label{sec:results}
+
+V tejto časti uvádzame prehľad nameraných výsledkov, spolu s vysvetleniami a poznámkami.
+V tabuľkách sme uviedli prehľad vyťaženia procesorov a dĺžku trvania behu programu pre používateľa,
+to znamená od spustenia programu po jeho úspešné ukončenie. Posledný riadok tabuľky obsahuje
+priemerné hodnoty.
+
+\subsubsection{GNU Make}
+\label{sec:results:make}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{| l || c | r |}
+    \hline
+    \v{C}\'{i}slo pokusu & Vyu\v{z}itie CPU & \v{C}as \\ \hline \hline
+    1. & 332\% & 21.74s \\ \hline
+    2. & 318\% & 21.79s \\ \hline
+    3. & 324\% & 21.72s \\ \hline
+    4. & 272\% & 21.78s \\ \hline
+    5. & 289\% & 21.69s \\ \hline \hline
+    Priemer & 307\% & 21.74s \\
+    \hline
+  \end{tabular}
+  \caption{V\'{y}sledky pre GNU Make}
+  \label{tbl:make}
+\end{table}
+
+\subsubsection{Nedistribuovan\'{y} Forge}
+\label{sec:results:forgelocal}
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{| l || c | r |}
+    \hline
+    \v{C}\'{i}slo pokusu & Vyu\v{z}itie CPU & \v{C}as \\ \hline \hline
+    1. & 270\% & 6.85s \\ \hline
+    2. & 323\% & 6.90s \\ \hline
+    3. & 317\% & 6.71s \\ \hline
+    4. & 335\% & 6.96s \\ \hline
+    5. & 332\% & 6.87s \\ \hline \hline
+    Priemer & 315\% & 6.85s \\
+    \hline
+  \end{tabular}
+  \caption{V\'{y}sledky pre nedistribuovan\'{y} Forge}
+  \label{tbl:forgelocal}
+\end{table}
+
+Z výsledkov vidíme, že systém Forge je asi 3-krát rýchlejší ako GNU Make. Toto je
+pravdepodobne kvôli tomu, že Make spúšťa príkazy kompilácie nepriamo, spustením shellu,
+ktorý potom spúšťa samotný kompilátor, na rozdiel od systému Forge, ktorý spúšťa kompilátor
+priamo ako dcérsky proces. Ďalším dôvodom môže byť samotné parsovanie build programov, kde
+Makefile je oveľa zložitejšie spracovávať, najmä kvôli rôznym definíciam, premenným a volaniam
+externých príkazov. Formát YAML, ktorý používa pre svoje BUILD súbory Forge je jednoducho
+a rýchlo spracovateľný.
+
+\subsubsection{Distribuovan\'{y} Forge}
+\label{sec:results:forge}
+
+Pri testovaní použitia serveru na kompiláciu sme sa rozhodli vyskúšať 2 varianty nastavení.
+Obe nastavenia využívajú plnú kapacitu serveru, pričom prvé zároveň využíva aj plnú kapacitu
+testovacieho laptopu, zatiaľčo druhé využíva laptop iba z polovice.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{| l || c | r |}
+    \hline
+    \v{C}\'{i}slo pokusu & Vyu\v{z}itie CPU & \v{C}as \\ \hline \hline
+    1. & 263\% & 6.22s \\ \hline
+    2. & 302\% & 6.04s \\ \hline
+    3. & 278\% & 5.68s \\ \hline
+    4. & 300\% & 6.20s \\ \hline
+    5. & 302\% & 6.25s \\ \hline \hline
+    Priemer & 289\% & 6.08s \\
+    \hline
+  \end{tabular}
+  \caption{V\'{y}sledky pre distribuovan\'{y} Forge so 4 lok\'{a}lnymi vl\'{a}knami}
+  \label{tbl:forge4}
+\end{table}
+
+V porovnaní s predchádzajúcim, čisto lokálnym behom systému vidíme mierny pokles
+trvania kompilácie, ako aj pokles vyťaženia procesora, presne ako bolo očakávané.
+Zrýchlenie spôsobené zdvojnásobení počtu kompilujúcich vlákien by sa prejavilo
+viditeľnejšie pri väčšom projekte.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{| l || c | r |}
+    \hline
+    \v{C}\'{i}slo pokusu & Vyu\v{z}itie CPU & \v{C}as \\ \hline \hline
+    1. & 25\% & 2.45s \\ \hline
+    2. & 18\% & 2.69s \\ \hline
+    3. & 28\% & 2.46s \\ \hline
+    4. & 26\% & 2.41s \\ \hline
+    5. & 26\% & 2.42s \\ \hline \hline
+    Priemer & 24\% & 2.48s \\
+    \hline
+  \end{tabular}
+  \caption{V\'{y}sledky pre distribuovan\'{y} Forge s 2 lok\'{a}lnymi vl\'{a}knami}
+  \label{tbl:forge2}
+\end{table}
+
+Výsledok behu s 2 lokálnymi vláknami môže vyzerať veľmi prekvapivo. Hlavným dôvodom
+tohto zrýchlenia je pravdepodobne uvoľnenie jedného z lokálnych vlakien na spracovávanie
+stálej sieťovej komunikácie so serverom a teda využívanie reálnych 6 jadier. Pri použití
+4 lokálnych vlákien je totiž vlákno zabezpečujúce komunikáciu blokované vláknom so spusteným
+kompilačným procesom, čo môže spôsobovať spomalenie systému.
