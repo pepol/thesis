@@ -1,3 +1,24 @@
 \chapter*{Záver}
 \addcontentsline{toc}{chapter}{Záver}
 
+Úspešne sa nám podarilo implementovať jednoduchý distribuovaný build systém napísaný
+v jazyku Go. Pri implementácii systému sme sa držali konvencií jazyka Go a snažili
+sme sa všetky zdroje používateľského počítača využívať čo možno najefektívnejšie.
+Systém Forge sme zverejnili ako open-source pod MIT Licenciou na stránke
+\url{https://github.com/imterra/forge}.
+
+Z výsledkov testov v kapitole~\ref{ch:comp} vidíme, že systém je naprogramovaný
+efektívne a dokázal poskytnúť takmer 9-násobné zrýchlenie iba s použitím jedného
+servera oproti lokálne bežiacemu systému GNU Make.
+
+Najväčším problémom s ktorým sme sa stretli bol návrh algoritmu na distribúciu
+kompilačných úloh na servery. Pri našej implementácii sme použili jednoduchý
+naivný algoritmus na základe vyťaženosti stroja a dostupnosti súborov. Pre
+efektívnejšiu distribúciu by bolo možné použiť napríklad algoritmus založený
+na poznatkoch zo strojového učenia.
+
+V budúcnosti by sme radi rozšírili systém o podporu ďalších programovacích jazykov,
+ako aj zlepšili podporu aktuálne podporovaných. Taktiež by sme radi pridali
+podporu na zabezpečenú komunikáciu medzi komponentmi, zdieľané úložisko súborov
+a podporu pre systémy správy verzií zdrojových kódov, aby bola aplikácia reálne
+použiteľná v komerčnej sfére.
