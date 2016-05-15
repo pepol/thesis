@@ -224,7 +224,8 @@ Pri písaní BUILD súborov odporúčame používať zjednodušený formát YAML
 generovaný automatickým prevodom z iného formátu, je JSON formát akceptovateľný.
 
 Pri zverejňovaní projektov používajúcich Forge na verejných úložískách zdrojových
-kódov typu GitHub oporúčame používať FQTN začínajúce reťazcom \texttt{//github/USERNAME/REPOSITORY}\footnote{Adresa projektu na stránke bude \url{https://github.com/USERNAME/REPOSITORY}},
+kódov typu GitHub oporúčame používať FQTN začínajúce reťazcom \\
+\texttt{//github/USERNAME/REPOSITORY}\footnote{Adresa projektu na stránke bude \url{https://github.com/USERNAME/REPOSITORY}},
 kde \texttt{USERNAME} je používateľské meno (alebo názov organizácie), ktorá repozitár
 zverejnila a \texttt{REPOSITORY} je názov repozitára. Ekvivalentné pomenovanie odporúčame
 aj pre ďalšie hostingové služby. Toto umožňuje používateľom systému závislého na
@@ -267,9 +268,9 @@ pomocou zastavenia bežiaceho procesu a použitia príkazu \texttt{bg}.
 Pri spustení Master komponentu mu, okrem prípadných nastavení pomocou argumentov,
 ako uvádzame v časti~\ref{sec:configuration:slave}, zadávame aj názov cieľa alebo
 niekoľko cieľov (oddelených medzerami), ktoré vyžadujeme splniť. Ciele uvádzame
-pomocou ich FQTN, avšak, ak aktuálna pracovná zložka je podpriečinkom koreňového
-adresára systému, môžeme uviesť aj relatívnu cestu k cieľu, od pracovnej zložky.
-Obidva spôsoby adresácie sme ukázali v listingu~\ref{lst:example:master}.
+pomocou ich FQTN, avšak, ak aktuálny adresár je podpriečinkom koreňového
+adresára systému, môžeme uviesť aj relatívnu cestu k cieľu, od tohto aktuálneho
+adresára. Obidva spôsoby adresácie sme ukázali v listingu~\ref{lst:example:master}.
 
 V prípade spustenia Master komponentu s nastaveným parametrom \texttt{jobs} na hodnotu
 inú ako 0, tento spustí ako podproces lokálny Slave komponent počúvajúci na porte 1103,

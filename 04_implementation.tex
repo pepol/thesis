@@ -134,7 +134,7 @@ z ktorého vzniklo označenie LD} výsledných objektov s knižnicami.
 
 Ako uvádzame v časti~\ref{sec:master:target}, metóda GetOutputFile rozhrania Target
 je zodpovedná za vytvorenie správneho grafu akcií pre daný cieľ. Graf akcií je
-bipartitný graf zlozžený z objektov rozhrania Action (akcie, úlohy) a objektov
+bipartitný graf zložený z objektov rozhrania Action (akcie, úlohy) a objektov
 rozhrania File (zdrojové alebo vygenerované súbory).
 
 Nasleduje popis funkcionality metódy pre jednotlivé triedy:
@@ -188,11 +188,11 @@ implementovali funkciu MakeFile. Táto funkcia sa spúšťa asynchrónne s infor
 o tom aký súbor sa má získať, aké nastavenia sa pritom majú použiť. Súčasťou je
 aj určenie kanálu (dátový typ chan), ktorý sa použije na informovanie volajúceho
 o úspešnom získaní súboru. V prípade akejkoľvek chyby funkcia signalizuje chybu,
-oznámi ju používateľovi a spôsobi ukončenie behu aplikácie.
+oznámi ju používateľovi a spôsobí ukončenie behu aplikácie.
 
 \subsubsection{Získanie vstupných súborov}
 
-Funkcia funguje rekurzívne, v prípade, že súbor sa dá získať spustením akcie, ju
+Funkcia MakeFile funguje rekurzívne, v prípade, že súbor sa dá získať spustením akcie, ju
 najprv asynchrónne zavoláme na vstupné súbory tejto akcie a počkáme, kým všetky
 úspešne skončia.
 
@@ -207,10 +207,6 @@ počas jeho predchádzajúceho použitia. Tieto informácie zapisujeme po ukonč
 všetkých akcií, tesne pred ukončením behu aplikácie. Takto získaný kontrolný súčet
 porovnáme s kontrolným súčtom existujúceho súboru a v prípade, že sa tieto líšia,
 vykonáme akciu. V prípade neexistencie súboru je akcia vykonaná tiež.
-
-\subsubsection{Výber Slave komponentu na vykonanie akcie}
-
-% TODO describe worker selection
 
 \subsubsection{Vykonanie akcie}
 
@@ -233,7 +229,7 @@ Najväčším problémom s ktorým sme sa stretli bolo zabezpečenie, aby akcie 
 volané viac krát, v prípade, že niekoľko rôznych súborov záleží na rovnakom
 súbore. Kedže systém je implementovaný ako vysoko paralelný, vznikol tu potenciálny
 kritický súbeh (race condition), kedy by sa počas vykonávania akcie na Slave komponente
-spustilo vykonávanie akcie v inom vlákne.
+spustilo vykonávanie rovnake akcie v inom vlákne.
 
 Na zabránenie tomuto problému sme zjednotili objekty súborov pre celú aplikáciu a prístup
 k nim synchronizovali pomocou zamykacej techniky semafórov.
@@ -288,9 +284,10 @@ aktívnych procedúr služby Task, ktoré na zabezpečenie používajú semafór
 pomocou atribútu objektu služby. Funkcionalitu semafóru sme dosiahli pomocou
 dátového typu channel, ktorému určujeme veľkosť na základe hodnoty argumentu \texttt{jobs}.
 Zároveň u každej procedúry tejto služby vyžadujeme, aby pri spustení zapísala do semafóru
-údaje, akcia ktorá v jazyku Go blokuje, ak je objekt naplnený, a po skončení vykonávania,
-úspešnom ako aj neúspešnom, hodnotu zo semafóru prečítala a tým uvoľnila miesto pre
-vykonávanie ďalších procedúr.
+údaje. Pokiaľ semafór nemá kapacitu na prijatie ďalšej hodnoty, akcia zápisu v jazyku Go blokuje
+a teda procedúra bude čakať na uvoľnenie kapacity. Po úspešnom ako aj neúspešnom ukončení
+musi procedúra hodnotu zo semafóru prečítať aby tým uvoľnila miesto pre vykonávanie ďalších
+úloh.
 
 \begin{listing}[H]
   \inputminted[frame=lines,framesep=2mm,linenos,fontsize=\scriptsize,firstline=9,lastline=22]{go}{/home/pepol/src/imterra/forge/worker/tasks/util.go}

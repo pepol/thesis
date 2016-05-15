@@ -6,7 +6,7 @@ Vysvetlíme si algoritmy na rozdelenie práce v distribuovanom prostredí, preds
 si algoritmy vytvárania a prechádzania grafu závislostí, ktoré sú neoddeliteľnou
 súčasťou každého build systému.
 
-\section{Graf z\'{a}vislost\'{i}}
+\section{Graf cie\v{l}ov}
 \label{sec:depgraph}
 
 Jednou z neoddeliteľných súčastí akéhokoľvek väčšieho projektu je používanie knižníc
@@ -19,14 +19,20 @@ knižnice nazývame závislosťami projektu a v BUILD súboroch ich uvádzame, a
 kompilácie v zozname dependencies, z anglického termínu pre závislosť.
 
 Naša aplikácia pri spustení prejde rekurzívne definície vyžiadaných cieľov a ich závislostí,
-pričom vytvára orientovaný graf, tzv.\ graf závislostí. Pre tento graf vyžadujeme, aby bol
+pričom vytvára orientovaný graf, tzv.\ graf cieľov. Pre tento graf vyžadujeme, aby bol
 acyklický. V opačnom prípade nevieme splniť požiadavky cieľa, ktorý obsahuje danú
 cyklickú závislosť.
 
-Po vytvorení tohto grafu ja tento prejdený od listov nahor. Listy grafu závislostí
+Po vytvorení tohto grafu je tento prejdený od listov nahor. Listy grafu cieľov
 sme definovali ako ciele, ktoré nemajú žiadne závislosti a sú teda koncovými uzlami
 grafu. Každý z cieľov grafu je následne splnený. V prípade úspešného splnenia cieľa vyžiadaného
-používateľom je celá kompilácia ukončená úspechom.
+používateľom je celá kompilácia ukončená úspechom. Príklad grafu uvázame na obrázku~\ref{img:depgraphtheory}.
+
+\begin{figure}[h]
+  \centerline{\includegraphics[width=0.8\textwidth]{images/dependency_targets}}
+  \caption[Graf cieľov]{Príklad grafu cieľov pre aplikáciu zloženú z RPC servera a klienta}
+  \label{img:depgraphtheory}
+\end{figure}
 
 \section{Algoritmus distrib\'{u}cie akci\'{i}}
 \label{sec:actiondistrib}
@@ -38,4 +44,4 @@ je spustený používateľom. Master komponent na rozdelenie úloh používa pri
 daný Slave komponent má k dispozícii, následne spočítame, koľko zo súborov, ktoré
 sú potrebné na kompiláciu sú pre každý zo serverov dostupné. K tomuto skóre pripočítame
 aktuálne voľný počet pracovných vlákien (v prípade, že počet voľných vlákien je 0, špecifikujeme
-výsledné skóre na 0). Následne akciu pošleme na server s najvyšším skóre.
+  výsledné skóre na 0). Následne akciu pošleme na server s najvyšším skóre.

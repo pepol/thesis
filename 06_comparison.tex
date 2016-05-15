@@ -1,4 +1,4 @@
-\chapter{Porovnanie syst\'{e}mu}
+\chapter{Testovanie syst\'{e}mu}
 \label{ch:comp}
 
 V tejto kapitole otestujeme a porovnáme výkon systému na zdrojových kódoch
@@ -13,10 +13,10 @@ a druhého bežiaceho na vzdialenom serveri.
 Kedže Forge podporuje zatiaľ iba kompiláciu zdrojových súborov jazyka C, rozhodli
 sme sa použiť projekt písaný iba v jazyku C. Druhým kritériom výberu bola jednoduchosť
 organizácie projektu a automatizovateľnosť tvorby BUILD súboru. Zároveň sme ale
-vyžadovali, aby bol projekt rozsiahly, vzhľadom na povahu testovania, kedy by pri
-malom, napríklad jednosúborovom projekte nebola distribúcia kompilácie použiteľná,
-prípadne by väčšiu rolu vo výsledkoch hralo aktuálne zaťaženie počítača, čím by sa
-skutočné výsledky skreslili.
+vyžadovali, aby bol projekt rozsiahly, vzhľadom na povahu testovania. Pri
+malom, napríklad jednosúborovom projekte by nebola distribúcia kompilácie použiteľná,
+prípadne by väčšiu rolu vo výsledkoch hralo aktuálne zaťaženie počítača. Toto by
+mohlo mať za následok skreslenie skutočných výsledkov.
 
 Pre testovanie sme vybrali projekt redis\footnote{\url{https://redis.io}}, ktorý
 spĺňal všetky naše požiadavky. Tento projekt na kompiláciu používa iba štandardný
