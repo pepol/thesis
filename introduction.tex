@@ -1,3 +1,36 @@
 \chapter*{Úvod}
 \addcontentsline{toc}{chapter}{Úvod}
 
+Kompilácia zdrojových súborov je každodenná súčasť práce na softvérovom projekte.
+Opakované zadávanie rovnakých príkazov môže pri nepozornosti spôsobenej rutinou
+spôsobiť zlyhanie. Preto je potrebné takéto procesy automatizovať. V spoločnostiach
+s prístupom k serverovej farme je možné tento výkon, pokiaľ ho nevyužívajú používatelia
+použiť na urýchlenie tohto procesu.
+
+Existujúce riešenia ako GNU Make, Apache Ant alebo Bazel poskytujú automatizáciu
+procesu na počítači používateľa. Avšak pre spoločnosti s prístupom k serverovým
+farmám a s rozsiahlymi projektami je výhodné použiť nevyužitý výkon serveru
+na kompiláciu. Niektoré veľké firmy majú vlastné systémy ktoré toto umožňujú,
+ale neexistuje jednoduché open-source riešenie, ktoré by vznikajúce spoločnosti
+mohli využiť.
+
+Preto sme sa rozhodli implementovať distribuovaný build systém, ktorý bude jednoduchý
+na použitie a výkonný aj pri rozsiahlych softvérových projektoch. Ako vhodný programovací
+jazyk sa javí Go, vďaka vstavanej podpore paralelizmu, a ako platformu sme zvolili
+operačný systém Linux/Unix, kvôli rozšírenosti na serveroch ako aj pracovných staniciach
+programátorov.
+
+Cieľom tejto práce je poskytnúť teoretické základy za systémom a tiež oboznámiť
+čitateľa so štruktúrou a logikou aplikácie.
+
+V kapitole~\ref{ch:spec} popíšeme požiadavky a návrh systému. V kapitole~\ref{ch:tech}
+vysvetlíme dôvody výberu použitých technológií a v kapitole~\ref{ch:theory} uvedieme
+teoretické základy návrhu.
+
+Kapitola~\ref{ch:impl} tvorí jadro práce a popisujeme v nej implementáciu aplikácie.
+Vysvetlíme fungovanie a logiku systému, popíšeme jednotlivé moduly a služby, a uvedieme
+ukážky zaujímavých časti zdrojového kódu.
+
+V kapitole~\ref{ch:doc} poskytneme dokumentáciu inštalácie, nastavenia a používania systému, spoločne
+s príkladmi popisov kompilovanych projektov. Na záver, v kapitole~\ref{ch:comp} porovnáme
+vytvorený systém s existujúcimi riešeniami.
