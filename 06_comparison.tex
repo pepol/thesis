@@ -170,3 +170,8 @@ tohto zrýchlenia je pravdepodobne uvoľnenie jedného z lokálnych vlakien na s
 stálej sieťovej komunikácie so serverom a teda využívanie reálnych 6 jadier. Pri použití
 4 lokálnych vlákien je totiž vlákno zabezpečujúce komunikáciu blokované vláknom so spusteným
 kompilačným procesom, čo môže spôsobovať spomalenie systému.
+
+Pre výsledky lepšie vypovedajúce o efektívnosti implementácie by bol potrebný test
+kompilácie projektu s rádovo stovkami súborov na desiatkach serverov. Problémom takéhoto
+testu je ale náročnosť na prostriedky. Druhým problémom s ktorým sme sa stretli bolo
+nájdenie vhodného, dostatočne veľkého projektu. Z týchto dôvodov sme tento test neuskutočnili.
